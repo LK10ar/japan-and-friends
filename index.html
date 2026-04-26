@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan and Friends - Carte Complète</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <style>
+        /* --- DESIGN MODE SOMBRE & SAKURA --- */
+        :root {
+            --bg-noir: #121212; --bg-gris-fonce: #1e1e1e;
+            --texte-clair: #f5f5f5; --couleur-sakura: #ffb7c5;
+            --texte-fonce: #121212; --bordure-kanpai: #444;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; background-color: var(--bg-noir); color: var(--texte-clair); }
+        header { background-color: var(--bg-gris-fonce); padding: 20px; text-align: center; position: relative; border-bottom: 2px solid var(--couleur-sakura); z-index: 1000; }
+        header h1 { margin: 0; font-size: 32px; color: var(--couleur-sakura); }
+        .lang-selector { position: absolute; top: 20px; right: 20px; }
+        .lang-selector select { padding: 5px; border-radius: 4px; background-color: var(--bg-noir); color: var(--texte-clair); cursor: pointer; }
+        
+        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; background-color: #000; padding: 15px; position: relative; z-index: 1000; }
+        nav a { color: var(--texte-clair); text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
+        nav a:hover { background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; }
+
+        /* --- LAYOUT 3 COLONNES --- */
+        .layout-pro { display: flex; max-width: 1600px; margin: 20px auto; gap: 20px; padding: 0 15px; align-items: stretch; justify-content: center; }
+        
+        .sidebar { flex: 0 0 280px; background: var(--bg-gris-fonce); border-radius: 12px; padding: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); overflow-y: auto; height: 75vh; }
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: var(--bg-noir); border-radius: 5px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--couleur-sakura); border-radius: 5px; }
+
+        .sidebar-title { color: var(--couleur-sakura); font-size: 20px; border-bottom: 1px solid var(--bordure-kanpai); padding-bottom: 10px; margin-top: 0; margin-bottom: 15px; }
+        
+        .region-block { margin-bottom: 20px; font-size: 14px; line-height: 1.8; color: #ccc; border-bottom: 1px solid var(--bordure-kanpai); padding-bottom: 15px; }
+        .region-block strong { color: white; display: inline-block; font-size: 15px; margin-bottom: 5px; }
+        .ville-lien { color: #90caf9; text-decoration: none; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .ville-lien:hover { color: var(--couleur-sakura); text-decoration: underline; }
+
+        .type-visite-label { display: flex; align-items: center; gap: 10px; cursor: pointer; color: #ccc; font-size: 15px; padding: 8px 0; border-bottom: 1px solid var(--bordure-kanpai); transition: 0.2s; }
+        .type-visite-label:hover { color: var(--couleur-sakura); }
+        .type-visite-label input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--couleur-sakura); }
+
+        .map-wrapper { flex: 1; min-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .action-area { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .api-search-btn { padding: 12px 25px; border: none; border-radius: 25px; background-color: #64b5f6; color: var(--texte-fonce); cursor: pointer; font-weight: bold; transition: 0.3s; box-shadow: 0 0 15px rgba(100, 181, 246, 0.4); flex: 1; min-width: 250px; }
+        .api-search-btn:hover { background-color: white; }
+        .roadtrip-btn { padding: 12px 25px; border: none; border-radius: 25px; background-color: var(--couleur-sakura); color: var(--texte-fonce); cursor: pointer; font-weight: bold; transition: 0.3s; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 183, 197, 0.4); flex: 1; min-width: 250px; }
+        .roadtrip-btn:hover { background-color: white; }
+
+        #map { flex: 1; min-height: 600px; width: 100%; border-radius: 12px; border: 2px solid #333; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 1; }
+
+        /* Clusters (Regroupements rouges) */
+        .kanpai-cluster { background-color: rgba(198, 40, 40, 0.85); border: 3px solid #ff5252; color: white; font-weight: bold; font-size: 16px; border-radius: 50%; text-align: center; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 82, 82, 0.6); }
+        
+        /* Emojis sur la carte */
+        .emoji-marker { display: flex; align-items: center; justify-content: center; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); background: transparent; border: none; }
+
+        /* Popup Corrigée */
+        .leaflet-popup-content-wrapper { background-color: var(--bg-gris-fonce); color: var(--texte-clair); border: 2px solid var(--couleur-sakura); border-radius: 12px; padding: 0; overflow: hidden; }
+        .leaflet-popup-tip { background-color: var(--couleur-sakura); }
+        .leaflet-popup-content { margin: 0; width: 280px !important; max-width: 100%; }
+        .popup-header-img { width: 100%; height: 100px; object-fit: cover; border-bottom: 2px solid #333; background-color: #000; }
+        .popup-body { padding: 12px; text-align: center; }
+        .popup-title { font-size: 16px; color: var(--couleur-sakura); margin: 0 0 5px 0; }
+        .popup-desc { font-size: 12px; color: #ccc; margin-bottom: 10px; max-height: 70px; overflow-y: auto; text-align: left; }
+        .popup-link { display: inline-block; margin-bottom: 10px; color: #66aaff; text-decoration: none; font-size: 12px; border-bottom: 1px solid #66aaff; }
+        .popup-btn { width: 100%; margin-top: 6px; padding: 8px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; color: var(--texte-fonce); background-color: var(--couleur-sakura); }
+        .popup-btn:hover { background-color: white; }
+
+        @media (max-width: 1100px) { 
+            .layout-pro { flex-wrap: wrap; }
+            .sidebar { flex: 1 1 100%; height: auto; max-height: 400px; }
+            .map-wrapper { order: -1; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="lang-selector">
+            <select id="langSwitch" onchange="changerLangue(this.value)">
+                <option value="fr">Français</option><option value="en">English</option><option value="ru">Русский</option>
+            </select>
+        </div>
+        <h1>Japan and Friends</h1>
+        <p>Visites, Itinéraires et Carte Interactive</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Carte & Activités</a>
+        <a href="vocabulaire.html">Mots Utiles</a>
+        <a href="convertisseur.html">Convertisseur Yen/Euro</a>
+        <a href="infos.html">Bons Plans & Transports</a>
+        <a href="budget.html">Mon Solde</a>
+        <a href="roadtrip.html">Itinéraire 90 Jours</a>
+        <a href="guide.html">Guide Culturel</a>
+    </nav>
+
+    <div class="layout-pro">
+        <aside class="sidebar">
+            <h2 class="sidebar-title">Visites au Japon</h2>
+            <div class="region-block">
+                <strong>Tokyo (best-of) :</strong> <br>
+                <a class="ville-lien" onclick="volerVers('Shinjuku')">Shinjuku</a>, 
+                <a class="ville-lien" onclick="volerVers('Shibuya')">Shibuya</a>, 
+                <a class="ville-lien" onclick="volerVers('Harajuku')">Harajuku</a>, 
+                <a class="ville-lien" onclick="volerVers('Asakusa')">Asakusa</a>, 
+                <a class="ville-lien" onclick="volerVers('Akihabara')">Akihabara</a>, 
+                <a class="ville-lien" onclick="volerVers('Odaiba')">Odaiba</a>, 
+                <a class="ville-lien" onclick="volerVers('Ikebukuro')">Ikebukuro</a>, 
+                <a class="ville-lien" onclick="volerVers('Ueno')">Ueno</a>, 
+                <a class="ville-lien" onclick="volerVers('Roppongi')">Roppongi</a>, 
+                <a class="ville-lien" onclick="volerVers('Chiyoda')">Chiyoda</a>, 
+                <a class="ville-lien" onclick="volerVers('Ryogoku')">Ryogoku</a>...
+            </div>
+            <div class="region-block">
+                <strong>Autour de la capitale :</strong> <br>
+                <a class="ville-lien" onclick="volerVers('Kamakura')">Kamakura</a>, 
+                <a class="ville-lien" onclick="volerVers('Nikko')">Nikko</a>, 
+                <a class="ville-lien" onclick="volerVers('Hakone')">Hakone</a>, 
+                <a class="ville-lien" onclick="volerVers('Mont Fuji')">Mont Fuji</a>, 
+                <a class="ville-lien" onclick="volerVers('Mont Takao')">Mont Takao</a>, 
+                <a class="ville-lien" onclick="volerVers('Yokohama')">Yokohama</a>...
+            </div>
+            <div class="region-block">
+                <strong>Le Kansai :</strong> <br>
+                <a class="ville-lien" onclick="volerVers('Kyoto')">Kyoto (best-of)</a>, 
+                <a class="ville-lien" onclick="volerVers('Nara')">Nara</a>, 
+                <a class="ville-lien" onclick="volerVers('Osaka')">Osaka</a>, 
+                <a class="ville-lien" onclick="volerVers('Mont Koya')">Mont Koya</a>, 
+                <a class="ville-lien" onclick="volerVers('Himeji')">Himeji</a>, 
+                <a class="ville-lien" onclick="volerVers('Kobe')">Kobe</a>, 
+                <a class="ville-lien" onclick="volerVers('Kinosaki')">Kinosaki</a>, 
+                <a class="ville-lien" onclick="volerVers('Kumano Kodo')">Kumano Kodo</a>, 
+                <a class="ville-lien" onclick="volerVers('Ise')">Ise</a>...
+            </div>
+            <div class="region-block">
+                <strong>Alpes japonaises :</strong> <br>
+                <a class="ville-lien" onclick="volerVers('Kanazawa')">Kanazawa</a>, 
+                <a class="ville-lien" onclick="volerVers('Matsumoto')">Matsumoto</a>, 
+                <a class="ville-lien" onclick="volerVers('Takayama')">Takayama</a>, 
+                <a class="ville-lien" onclick="volerVers('Shirakawa-go')">Shirakawa-go</a>, 
+                <a class="ville-lien" onclick="volerVers('Nakasendo')">Nakasendo</a>, 
+                <a class="ville-lien" onclick="volerVers('Route Alpine')">Route Alpine</a>...
+            </div>
+            <div class="region-block">
+                <strong>À l'ouest :</strong> <br>
+                <a class="ville-lien" onclick="volerVers('Hiroshima')">Hiroshima</a>, 
+                <a class="ville-lien" onclick="volerVers('Miyajima')">Miyajima</a>, 
+                <a class="ville-lien" onclick="volerVers('Shikoku')">Shikoku</a>, 
+                <a class="ville-lien" onclick="volerVers('Onomichi')">Onomichi</a>, 
+                <a class="ville-lien" onclick="volerVers('Naoshima')">Naoshima</a>, 
+                <a class="ville-lien" onclick="volerVers('Izumo')">Izumo</a>, 
+                <a class="ville-lien" onclick="volerVers('Kurashiki')">Kurashiki</a>, 
+                <a class="ville-lien" onclick="volerVers('Matsue')">Matsue</a>...
+            </div>
+            <div class="region-block">
+                <strong>Le sud :</strong> <br>
+                <a class="ville-lien" onclick="volerVers('Kyushu')">Kyushu</a>, 
+                <a class="ville-lien" onclick="volerVers('Okinawa')">Okinawa</a>, 
+                <a class="ville-lien" onclick="volerVers('Yakushima')">Yakushima</a>...
+            </div>
+            <div class="region-block">
+                <strong>Le nord :</strong> <br>
+                <a class="ville-lien" onclick="volerVers('Hokkaido')">Hokkaido</a>, 
+                <a class="ville-lien" onclick="volerVers('Tohoku')">Tohoku</a>...
+            </div>
+        </aside>
+
+        <main class="map-wrapper">
+            <div class="action-area">
+                <button class="api-search-btn" id="btn-search" onclick="chercherLieuxDansZone()">
+                    🔍 Scanner TOUT dans cette zone
+                </button>
+                <a href="roadtrip.html" class="roadtrip-btn">
+                    🚗 Voir mon Roadtrip Interactif
+                </a>
+            </div>
+            <div id="map"></div>
+        </main>
+
+        <aside class="sidebar">
+            <h2 class="sidebar-title">Types de visites</h2>
+            <label class="type-visite-label"><input type="checkbox" id="chk-temple" checked onchange="filtrerCarte()"> ⛩️ Temples et sanctuaires</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-parc" checked onchange="filtrerCarte()"> 🌳 Jardins et parcs</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-chateau" checked onchange="filtrerCarte()"> 🏯 Châteaux</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-rando" checked onchange="filtrerCarte()"> 🥾 Randonnées et excursions</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-obs" checked onchange="filtrerCarte()"> 🔭 Observatoires</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-onsen" checked onchange="filtrerCarte()"> ♨️ Bains publics (onsen)</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-plage" checked onchange="filtrerCarte()"> 🏖️ Plages</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-musee" checked onchange="filtrerCarte()"> 🏛️ Musées</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-matsuri" checked onchange="filtrerCarte()"> 🏮 Festivals (matsuri)</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-parcatt" checked onchange="filtrerCarte()"> 🎢 Parcs d'attraction</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-marche" checked onchange="filtrerCarte()"> 🐟 Marchés</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-resto" checked onchange="filtrerCarte()"> 🍜 Restaurants</label>
+            <label class="type-visite-label"><input type="checkbox" id="chk-hotel" checked onchange="filtrerCarte()"> 🏨 Hôtels</label>
+        </aside>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    
+    <script>
+        let langueActuelle = 'fr';
+        const IMAGE_SECOURS = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Skyscrapers_of_Shinjuku_2009_January.jpg/300px-Skyscrapers_of_Shinjuku_2009_January.jpg";
+
+        const map = L.map('map').setView([36.2048, 138.2529], 6);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+        let groupeClusters = L.markerClusterGroup({
+            iconCreateFunction: function(cluster) {
+                let nombre = cluster.getChildCount();
+                let taille = nombre < 50 ? 40 : nombre < 500 ? 55 : nombre < 2000 ? 70 : 85;
+                return L.divIcon({ html: `<div>${nombre}</div>`, className: 'kanpai-cluster', iconSize: L.point(taille, taille) });
+            },
+            spiderfyOnMaxZoom: true, showCoverageOnHover: false, zoomToBoundsOnClick: true,
+            chunkedLoading: true // Optimisation pour très grand nombre de points
+        });
+        map.addLayer(groupeClusters);
+
+        const emojis_marqueurs = {
+            'temple': '⛩️', 'parc': '🌳', 'chateau': '🏯', 'rando': '🥾',
+            'obs': '🔭', 'onsen': '♨️', 'plage': '🏖️', 'musee': '🏛️',
+            'matsuri': '🏮', 'parcatt': '🎢', 'marche': '🐟', 'resto': '🍜', 'hotel': '🏨'
+        };
+
+        let baseDeDonneesJapon = [];
+
+        // --- GÉNÉRATEUR ULTRA-MASSIF DE 15 000 POINTS ---
+        function genererLieuxMassifs() {
+            const villes = [
+                { lat: 35.6895, lng: 139.6917, rayon: 0.6, nb: 6000 }, // Tokyo & Kanto
+                { lat: 34.6937, lng: 135.5023, rayon: 0.5, nb: 4000 }, // Kansai (Osaka/Kyoto)
+                { lat: 33.5902, lng: 130.4017, rayon: 0.4, nb: 2000 }, // Kyushu (Fukuoka)
+                { lat: 43.0618, lng: 141.3545, rayon: 0.5, nb: 1500 }, // Hokkaido (Sapporo)
+                { lat: 35.1815, lng: 136.9066, rayon: 0.4, nb: 1000 }, // Chubu (Nagoya)
+                { lat: 26.2124, lng: 127.6809, rayon: 0.2, nb: 500 }   // Okinawa
+            ]; // Total = 15 000 points
+            
+            const types = ['temple', 'parc', 'chateau', 'rando', 'obs', 'onsen', 'plage', 'musee', 'matsuri', 'parcatt', 'marche', 'resto', 'hotel'];
+
+            villes.forEach(ville => {
+                for (let i = 0; i < ville.nb; i++) {
+                    let r = ville.rayon * Math.sqrt(Math.random());
+                    let theta = Math.random() * 2 * Math.PI;
+                    let pType = types[Math.floor(Math.random() * types.length)];
+                    let nomFaux = "Lieu Japonais (" + pType + ")";
+
+                    baseDeDonneesJapon.push({ 
+                        nom: nomFaux, 
+                        lat: ville.lat + r * Math.cos(theta), 
+                        lng: ville.lng + r * Math.sin(theta), 
+                        type: pType 
+                    });
+                }
+            });
+        }
+        // Lancement immédiat de la génération des 15000 points !
+        genererLieuxMassifs();
+
+        // --- DICTIONNAIRE COMPLET DES COORDONNÉES ---
+        const coordsVilles = {
+            "Shinjuku": [35.6938, 139.7034], "Shibuya": [35.6580, 139.7016], "Harajuku": [35.6698, 139.7028],
+            "Asakusa": [35.7147, 139.7966], "Akihabara": [35.6983, 139.7731], "Odaiba": [35.6248, 139.7731],
+            "Ikebukuro": [35.7295, 139.7109], "Ueno": [35.7140, 139.7740], "Roppongi": [35.6628, 139.7327],
+            "Chiyoda": [35.6940, 139.7536], "Ryogoku": [35.6961, 139.7942],
+            "Kamakura": [35.3167, 139.5361], "Nikko": [36.7199, 139.6982], "Hakone": [35.2324, 139.1069],
+            "Mont Fuji": [35.3606, 138.7274], "Mont Takao": [35.6251, 139.2435], "Yokohama": [35.4437, 139.6380],
+            "Kyoto": [35.0116, 135.7681], "Nara": [34.6851, 135.8048], "Osaka": [34.6937, 135.5023],
+            "Mont Koya": [34.2128, 135.5864], "Himeji": [34.8394, 134.6939], "Kobe": [34.6901, 135.1955],
+            "Kinosaki": [35.6263, 134.8143], "Kumano Kodo": [33.8410, 135.7726], "Ise": [34.4896, 136.7093],
+            "Kanazawa": [36.5613, 136.6562], "Matsumoto": [36.2380, 137.9720], "Takayama": [36.1404, 137.2583],
+            "Shirakawa-go": [36.2574, 136.9061], "Nakasendo": [35.5340, 137.5855], "Route Alpine": [36.5644, 137.6625],
+            "Hiroshima": [34.3853, 132.4553], "Miyajima": [34.2966, 132.3191], "Shikoku": [33.7397, 133.5225],
+            "Onomichi": [34.4093, 133.2045], "Naoshima": [34.4600, 133.9855], "Izumo": [35.3605, 132.7562],
+            "Kurashiki": [34.5833, 133.7667], "Matsue": [35.4681, 133.0483],
+            "Kyushu": [32.5907, 130.8020], "Okinawa": [26.2124, 127.6809], "Yakushima": [30.3341, 130.5284],
+            "Hokkaido": [43.0642, 141.3469], "Tohoku": [38.2682, 140.8694]
+        };
+
+        function volerVers(nomVille) {
+            if (coordsVilles[nomVille]) {
+                map.flyTo(coordsVilles[nomVille], 13);
+                if(window.innerWidth <= 1100) document.querySelector('.map-wrapper').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function filtrerCarte() {
+            groupeClusters.clearLayers();
+            
+            const filtres = {
+                'temple': document.getElementById('chk-temple').checked,
+                'parc': document.getElementById('chk-parc').checked,
+                'chateau': document.getElementById('chk-chateau').checked,
+                'rando': document.getElementById('chk-rando').checked,
+                'obs': document.getElementById('chk-obs').checked,
+                'onsen': document.getElementById('chk-onsen').checked,
+                'plage': document.getElementById('chk-plage').checked,
+                'musee': document.getElementById('chk-musee').checked,
+                'matsuri': document.getElementById('chk-matsuri').checked,
+                'parcatt': document.getElementById('chk-parcatt').checked,
+                'marche': document.getElementById('chk-marche').checked,
+                'resto': document.getElementById('chk-resto').checked,
+                'hotel': document.getElementById('chk-hotel').checked
+            };
+
+            let marqueursTemp = [];
+
+            baseDeDonneesJapon.forEach(lieu => {
+                if (filtres[lieu.type]) {
+                    let iconeEmoji = L.divIcon({
+                        className: 'emoji-marker',
+                        html: emojis_marqueurs[lieu.type] || '📍',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15],
+                        popupAnchor: [0, -15]
+                    });
+
+                    let marker = L.marker([lieu.lat, lieu.lng], { icon: iconeEmoji });
+
+                    marker.on('click', async function() {
+                        let popup = L.popup({ 
+                            className: 'custom-popup', maxWidth: 300, minWidth: 260, 
+                            autoPan: true, autoPanPaddingTopLeft: L.point(10, 80), autoPanPaddingBottomRight: L.point(10, 10) 
+                        })
+                        .setLatLng([lieu.lat, lieu.lng])
+                        .setContent('<div style="padding: 20px;">Chargement des infos... 🌸</div>')
+                        .openOn(map);
+
+                        let infos = await recupererInfosWikipédia(lieu.lat, lieu.lng, langueActuelle);
+                        let lienGoogle = `https://www.google.com/maps/search/?api=1&query=$$${lieu.lat},${lieu.lng}`;
+                        let nomSecurise = lieu.nom.replace(/'/g, "\\'"); 
+
+                        let htmlBulle = `
+                            <div>
+                                <img src="${infos.img}" class="popup-header-img" onerror="this.onerror=null; this.src='${IMAGE_SECOURS}';">
+                                <div class="popup-body">
+                                    <h3 class="popup-title">${emojis_marqueurs[lieu.type]} ${lieu.nom}</h3>
+                                    <p class="popup-desc">${infos.desc}</p>
+                                    <a href="${lienGoogle}" target="_blank" class="popup-link">📍 Voir sur Google Maps</a>
+                                    <div style="font-size: 13px; margin-bottom: 5px;">Ajouter à mon roadtrip :</div>
+                                    <button class="popup-btn" onclick="ajouterAuRoadtrip(${lieu.lat}, ${lieu.lng}, '${lieu.type}', '${nomSecurise}')">➕ Ajouter cette étape</button>
+                                </div>
+                            </div>`;
+                        popup.setContent(htmlBulle);
+                    });
+                    marqueursTemp.push(marker);
+                }
+            });
+
+            // On ajoute les 15 000 points d'un seul coup (ultra rapide grâce au tableau temporaire)
+            groupeClusters.addLayers(marqueursTemp);
+        }
+
+        async function chercherLieuxDansZone() {
+            const btn = document.getElementById('btn-search');
+            btn.innerText = "⏳ Aspiration des données en cours...";
+
+            let bounds = map.getBounds();
+            let bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+
+            let tags = [];
+            if (document.getElementById('chk-temple').checked) tags.push(`node["amenity"="place_of_worship"](${bbox});`, `node["historic"="monument"](${bbox});`);
+            if (document.getElementById('chk-chateau').checked) tags.push(`node["historic"="castle"](${bbox});`);
+            if (document.getElementById('chk-parc').checked) tags.push(`node["leisure"="park"](${bbox});`, `node["leisure"="garden"](${bbox});`);
+            if (document.getElementById('chk-hotel').checked) tags.push(`node["tourism"="hotel"](${bbox});`, `node["tourism"="guest_house"](${bbox});`);
+            if (document.getElementById('chk-resto').checked) tags.push(`node["amenity"="restaurant"](${bbox});`);
+            if (document.getElementById('chk-onsen').checked) tags.push(`node["amenity"="public_bath"](${bbox});`, `node["hot_spring"="yes"](${bbox});`);
+            if (document.getElementById('chk-musee').checked) tags.push(`node["tourism"="museum"](${bbox});`, `node["tourism"="gallery"](${bbox});`);
+            if (document.getElementById('chk-plage').checked) tags.push(`node["natural"="beach"](${bbox});`);
+            if (document.getElementById('chk-marche').checked) tags.push(`node["amenity"="marketplace"](${bbox});`);
+            if (document.getElementById('chk-obs').checked) tags.push(`node["tourism"="viewpoint"](${bbox});`);
+            if (document.getElementById('chk-parcatt').checked) tags.push(`node["tourism"="theme_park"](${bbox});`);
+
+            if(tags.length === 0) { alert("Coche au moins une catégorie à droite !"); btn.innerText = "🔍 Scanner TOUT dans cette zone"; return; }
+
+            let query = `[out:json][timeout:25];(${tags.join('')});out 500;`;
+            let url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+            try {
+                let reponse = await fetch(url);
+                let donnees = await reponse.json();
+                
+                let ajouts = 0;
+                donnees.elements.forEach(lieu => {
+                    if (lieu.lat && lieu.lon && lieu.tags && lieu.tags.name) {
+                        let typeObj = 'parc';
+                        if (lieu.tags.amenity === 'place_of_worship' || lieu.tags.historic === 'monument') typeObj = 'temple';
+                        else if (lieu.tags.historic === 'castle') typeObj = 'chateau';
+                        else if (lieu.tags.tourism === 'hotel' || lieu.tags.tourism === 'guest_house') typeObj = 'hotel';
+                        else if (lieu.tags.amenity === 'restaurant') typeObj = 'resto';
+                        else if (lieu.tags.amenity === 'public_bath' || lieu.tags.hot_spring === 'yes') typeObj = 'onsen';
+                        else if (lieu.tags.tourism === 'museum' || lieu.tags.tourism === 'gallery') typeObj = 'musee';
+                        else if (lieu.tags.natural === 'beach') typeObj = 'plage';
+                        else if (lieu.tags.amenity === 'marketplace') typeObj = 'marche';
+                        else if (lieu.tags.tourism === 'viewpoint') typeObj = 'obs';
+                        else if (lieu.tags.tourism === 'theme_park') typeObj = 'parcatt';
+                        
+                        if (!baseDeDonneesJapon.some(l => l.nom === lieu.tags.name && Math.abs(l.lat - lieu.lat) < 0.001)) {
+                            baseDeDonneesJapon.push({ nom: lieu.tags.name, lat: lieu.lat, lng: lieu.lon, type: typeObj });
+                            ajouts++;
+                        }
+                    }
+                });
+                
+                if(ajouts > 0) alert(`🔍 Succès ! ${ajouts} nouveaux lieux réels ont été ajoutés à ta carte.`);
+                else alert("Aucun nouveau lieu trouvé dans cette zone pour les catégories cochées.");
+                
+                filtrerCarte();
+            } catch (error) { alert("Le serveur mondial est surchargé. Dézoome un peu ou réessaie dans 10 secondes !"); }
+            btn.innerText = "🔍 Scanner TOUT dans cette zone";
+        }
+
+        window.ajouterAuRoadtrip = function(lat, lng, typeEtape, nomLieu) {
+            let etapes = JSON.parse(localStorage.getItem('monRoadtripJapon') || '[]');
+            etapes.push({ lat: parseFloat(lat), lng: parseFloat(lng), statut: 'todo', type: typeEtape, nom: nomLieu });
+            localStorage.setItem('monRoadtripJapon', JSON.stringify(etapes));
+            alert(`✅ L'étape "${nomLieu}" a été envoyée vers ta page Roadtrip !`);
+            map.closePopup(); 
+        };
+
+        async function recupererInfosWikipédia(lat, lon, langue) {
+            let desc = "Un lieu fantastique à découvrir au Japon ! (Infos Wikipédia indisponibles)";
+            let img = IMAGE_SECOURS;
+            try {
+                let url = `https://${langue}.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages&exintro&explaintext&exchars=250&pithumbsize=300&generator=geosearch&ggscoord=${lat}|${lon}&ggsradius=1000&ggslimit=1&format=json&origin=*`;
+                let res = await fetch(url);
+                let data = await res.json();
+                if (data.query && data.query.pages) {
+                    let page = data.query.pages[Object.keys(data.query.pages)[0]];
+                    if (page.extract) desc = page.extract;
+                    if (page.thumbnail) img = page.thumbnail.source;
+                }
+            } catch (e) {}
+            return { desc, img };
+        }
+
+        function changerLangue(langue) { langueActuelle = langue; }
+
+        filtrerCarte();
+    </script>
+</body>
+</html>
