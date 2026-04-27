@@ -37,7 +37,6 @@
 
         .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         
-        /* On enlève la déco du lien pour que la carte soit propre */
         .lien-carte { text-decoration: none; color: inherit; display: block; height: 100%; }
         
         .article-card { background-color: var(--bg-gris-fonce); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.3s; display: flex; flex-direction: column; cursor: pointer; height: 100%; }
@@ -50,8 +49,6 @@
         .article-subtitle { margin: 0; font-size: 14px; color: #aaa; font-weight: bold; line-height: 1.4; }
         .article-desc { font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 20px; flex: 1; }
         .article-footer { border-top: 1px solid #333; padding-top: 15px; display: flex; flex-direction: column; gap: 5px; }
-        
-        /* CORRECTION : Suppression des lanternes et avis */
 
         @media (max-width: 900px) {
             .layout-guide { flex-direction: column; }
@@ -115,19 +112,22 @@
 
     <script>
         // BASE DE DONNÉES COMPLÈTE
-        // CORRECTION : Enlèvement des notes. Ajout du champ 'url' pour pointer vers hachiko.html
         const baseArticles = [
             // RELIGION
             { id: "koyasan", categorie: 'religion', titre: "Mont Koya", sousTitre: "Le centre du bouddhisme Shingon", desc: "Perché dans les montagnes, Koyasan abrite le majestueux cimetière d'Okunoin, lieu de repos éternel des moines au cœur d'une forêt mystique.", img: "https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&w=600&q=80"},
             { id: "ise-jingu", categorie: 'religion', titre: "Sanctuaire d'Ise", sousTitre: "Le lieu le plus sacré du shintoïsme", desc: "Situé dans la préfecture de Mie, c'est le sanctuaire shinto le plus important du Japon, dédié à Amaterasu.", img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80"},
             
+            // 👇 TON NOUVEL ARTICLE EST BIEN ICI 👇
+            { id: "todaiji", categorie: "religion", titre: "Todai-ji", sousTitre: "Le temple au Grand Bouddha de Nara", desc: "Le Todai-ji est un temple bouddhique situé à Nara, sur l'île principale de Honshu.", img: "https://www.kanpai.fr/sites/default/files/styles/big_header_lg/public/uploads/2020/06/nara-covid19-printemps-2020-5.jpg", url: "todaiji.html" },
+            
             // ANIMAUX
             { id: "nara-park", categorie: 'animaux', titre: "Parc de Nara", sousTitre: "Rencontre avec les cerfs sacrés", desc: "Plus de 1000 cerfs se promènent en liberté. Considérés comme des messagers divins, on peut les nourrir.", img: "https://images.unsplash.com/photo-1504109586057-7a2ae83d1338?auto=format&fit=crop&w=600&q=80"},
             { id: "jigokudani", categorie: 'animaux', titre: "Jigokudani Park", sousTitre: "Les singes des neiges dans les onsens", desc: "Dans les montagnes de Nagano, observez les célèbres macaques se prélasser dans les sources chaudes.", img: "https://images.unsplash.com/photo-1564369794354-94c8e763b6bc?auto=format&fit=crop&w=600&q=80"},
             { id: "okunoshima", categorie: 'animaux', titre: "Okunoshima", sousTitre: "L'île aux lapins", desc: "Une petite île de la mer intérieure de Seto envahie par des milliers de lapins sauvages et amicaux.", img: "https://images.unsplash.com/photo-1585110396000-c9fd4e4e5080?auto=format&fit=crop&w=600&q=80"},
+            { id: "nara_parc", categorie: "animaux", titre: "Le Parc de Nara", sousTitre: "À la rencontre des cerfs sacrés", desc: "...", img: "ton_image.jpg", url: "nara_parc.html" },
 
             // CONTES & LÉGENDES
-            { id: "hachiko", categorie: 'contes', titre: "Hachiko", sousTitre: "La statue du chien fidèle", desc: "Hachiko est le nom d'un chien Akita qui a attendu son maître décédé pendant 10 ans devant la gare de Shibuya.", img: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=600&q=80", url: "hachiko.html" }, // LIEN VERS LA PAGE DÉDIÉE
+            { id: "hachiko", categorie: 'contes', titre: "Hachiko", sousTitre: "La statue du chien fidèle", desc: "Hachiko est le nom d'un chien Akita qui a attendu son maître décédé pendant 10 ans devant la gare de Shibuya.", img: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=600&q=80", url: "hachiko.html" },
             { id: "ghibli", categorie: 'contes', titre: "Musée Ghibli", sousTitre: "Hommage merveilleux à Miyazaki", desc: "Consacré au célèbre studio d'animation, on y retrouve l'atmosphère féerique de Totoro et du Voyage de Chihiro.", img: "https://images.unsplash.com/photo-1554797589-7241bb691973?auto=format&fit=crop&w=600&q=80"}
         ];
 
@@ -152,7 +152,6 @@
             let articlesFiltres = baseArticles.filter(art => art.categorie === categorieRecherchee);
 
             articlesFiltres.forEach(article => {
-                // CORRECTION : L'url pointe vers 'hachiko.html' si elle existe, sinon vers '#'
                 const lienFinal = article.url || "#";
                 
                 let htmlCard = `
@@ -175,7 +174,8 @@
             });
         }
 
-        chargerArticles('contes');
+        // 👇 C'EST ICI QUE J'AI CHANGÉ : Ça ouvre "religion" par défaut au lieu de "contes" !
+        chargerArticles('religion');
     </script>
 </body>
 </html>
