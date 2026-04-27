@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Générateur d'Articles Ultime v9</title>
+    <style>
+        :root { --bg-noir: #121212; --bg-gris-fonce: #1e1e1e; --texte-clair: #f5f5f5; --couleur-sakura: #ffb7c5; --kanpai-rouge: #c62828; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-noir); color: var(--texte-clair); margin: 0; padding: 20px; }
+        h1 { text-align: center; color: var(--couleur-sakura); margin-bottom: 40px;}
+        .admin-container { max-width: 1000px; margin: 0 auto; background: var(--bg-gris-fonce); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--couleur-sakura); }
+        .label-sub { color: #888; font-size: 13px; font-weight: normal; display: block; margin-bottom: 5px; }
+        input[type="text"], select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: var(--bg-noir); color: white; box-sizing: border-box; font-family: inherit; }
+        .row { display: flex; gap: 20px; }
+        .col { flex: 1; }
+        
+        .builder-area { background: #111; padding: 20px; border-radius: 8px; border: 2px dashed #444; margin-bottom: 20px; min-height: 50px;}
+        .block-item { background: #222; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid var(--couleur-sakura); position: relative; }
+        .block-item.img-block { border-left-color: #64b5f6; }
+        .block-item.vid-block { border-left-color: #ff5252; }
+        .block-item.title-block { border-left-color: #ffd54f; }
+        .block-label { font-size: 12px; color: #aaa; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .btn-supprimer { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #ff5252; cursor: pointer; font-size: 16px; }
+        
+        .builder-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
+        .btn-add { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: #000; transition: 0.2s; min-width: 150px;}
+        .btn-add-txt { background-color: var(--couleur-sakura); }
+        .btn-add-img { background-color: #64b5f6; }
+        .btn-add-vid { background-color: #ff5252; color: white; }
+        .btn-add-tit { background-color: #ffd54f; }
+        .btn-add:hover { opacity: 0.8; }
+
+        .btn-generer { width: 100%; padding: 20px; background: var(--kanpai-rouge); color: white; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 40px; }
+        .btn-generer:hover { background: var(--couleur-sakura); color: black; box-shadow: 0 0 20px rgba(255,183,197,0.5);}
+        
+        .result-box { margin-top: 30px; display: none; background: #000; padding: 20px; border-radius: 8px; border: 1px solid #4CAF50;}
+        .result-title { color: #4CAF50; font-size: 18px; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px;}
+        .code-output { width: 100%; height: 120px; background: #111; color: #0f0; padding: 15px; border-radius: 8px; border: 1px solid #333; font-family: monospace; box-sizing: border-box; font-size: 13px; margin-bottom: 15px; resize: vertical;}
+        .btn-copy { padding: 10px 20px; background: #4CAF50; color: black; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px;}
+        .btn-copy:hover { background: white; }
+
+        .section-title { margin-top: 50px; padding-bottom: 10px; border-bottom: 2px solid #555; color: white; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px;}
+        .import-box { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ffd54f;}
+        .admin-bloc-kanpai { background: #111; border: 1px solid #333; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-top: 4px solid var(--kanpai-rouge);}
+    </style>
+</head>
+<body>
+    <h1>⚙️ Constructeur d'Articles Ultra</h1>
+    <div class="admin-container">
+        
+        <div class="import-box" id="importBox">
+            <label style="color: #ffd54f; display: block; margin-bottom: 10px;">🔄 MODE MODIFICATION : Colle la ligne de ton article ici</label>
+            <div style="display: flex; gap: 10px; align-items: stretch;">
+                <textarea id="inputImport" placeholder="Colle la ligne de code brute ici..." style="height: 60px; font-family: monospace; font-size: 12px;"></textarea>
+                <button onclick="importerProjet()" style="background: #ffd54f; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; padding: 0 20px;">Recharger</button>
+            </div>
+        </div>
+
+        <h2 class="section-title">1. Infos de base</h2>
+        <div class="row">
+            <div class="form-group col"><label>ID unique (ex: todaiji)</label><input type="text" id="inputId"></div>
+            <div class="form-group col">
+                <label>Catégorie</label>
+                <select id="inputCat">
+                    <option value="religion">Religion et spiritualité</option><option value="histoire">Histoire du Japon</option><option value="animaux">Animaux</option><option value="arts">Arts et histoire</option><option value="insolite">Japon insolite</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col"><label>Titre de la page</label><input type="text" id="inputTitre"></div>
+            <div class="form-group col"><label>Sous-titre (Slogan)</label><input type="text" id="inputSousTitre"></div>
+        </div>
+        <div class="form-group"><label>Description courte (Menu)</label><input type="text" id="inputDesc"></div>
+        <div class="form-group"><label>Bannière Principale</label><input type="text" id="inputImg"></div>
+
+        <h2 class="section-title">2. Contenu (Article)</h2>
+        <div class="builder-buttons">
+            <button class="btn-add btn-add-tit" onclick="ajouterBloc('titre')">➕ Sous-Titre</button>
+            <button class="btn-add btn-add-txt" onclick="ajouterBloc('texte')">➕ Texte</button>
+            <button class="btn-add btn-add-img" onclick="ajouterBloc('image')">➕ Image</button>
+            <button class="btn-add btn-add-vid" onclick="ajouterBloc('video')">➕ Vidéo</button>
+        </div>
+        <div id="builder-area" class="builder-area"></div>
+
+        <div class="form-group" style="margin-top: 30px;">
+            <label>📸 Galerie Photos (Mosaïque)</label>
+            <span class="label-sub">Un lien d'image par ligne.</span>
+            <textarea id="inputGalerie" style="height: 120px;"></textarea>
+        </div>
+
+        <div class="admin-bloc-kanpai">
+            <h3 style="margin-top:0; color:white;">📋 Se préparer</h3>
+            <div class="row">
+                <div class="form-group col">
+                    <label style="color:#aaa;">📍 Transports</label><textarea id="in_prep_transport" style="height: 100px;"></textarea>
+                </div>
+                <div class="form-group col">
+    <label style="color:#aaa;">📶 Internet</label>
+    <input type="text" id="in_prep_net" style="margin-bottom:10px;">
+    <label style="color:#aaa;">🏮 Évènements</label>
+    <textarea id="in_prep_event" style="height: 60px;"></textarea>
+</div>
+            </div>
+        </div>
+
+        <div class="admin-bloc-kanpai">
+            <h3 style="margin-top:0; color:white;">🗺️ Informations</h3>
+            <div class="row">
+                <div class="form-group col"><label style="color:#aaa;">Code Widget Météo</label><input type="text" id="inputMeteo"></div>
+                <div class="form-group col">
+                    <label style="color:#aaa;">Coordonnées Carte (GPS)</label>
+                    <div style="display:flex; gap:10px;"><input type="text" id="inputLat" placeholder="Lat"><input type="text" id="inputLng" placeholder="Lng"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-bloc-kanpai">
+            <h3 style="margin-top:0; color:white;">📍 Sur place</h3>
+            <div class="row">
+                <div class="form-group col">
+                    <label style="color:#aaa;">📅 Quand partir ?</label><textarea id="in_place_quand" style="height: 60px; margin-bottom:10px;"></textarea>
+                    <label style="color:#aaa;">🗣️ Nom Japonais</label><textarea id="in_place_nom" style="height: 60px;"></textarea>
+                </div>
+                <div class="form-group col">
+                    <label style="color:#aaa;">🕒 Horaires</label><textarea id="in_place_horaire" style="height: 60px; margin-bottom:10px;"></textarea>
+                    <label style="color:#aaa;">💴 Tarifs</label><textarea id="in_place_prix" style="height: 60px;"></textarea>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0; margin-top:10px;">
+                <label style="color:#aaa;">🔗 Site Web Officiel</label><input type="text" id="inputWeb">
+            </div>
+        </div>
+        
+        <h2 class="section-title">4. Que voir autour (Carrousel)</h2>
+        <div class="row">
+            <div class="form-group col" style="background:#000; padding:15px; border-radius:8px;">
+                <label style="color:white;">Lieu 1</label>
+                <input type="text" id="c1_t" placeholder="Titre" style="margin-bottom:10px;">
+                <input type="text" id="c1_s" placeholder="Sous-Titre" style="margin-bottom:10px;">
+                <input type="text" id="c1_d" placeholder="Distance (ex: 400 m)" style="margin-bottom:10px;">
+                <input type="text" id="c1_i" placeholder="Lien Image" style="margin-bottom:10px;">
+                <input type="text" id="c1_l" placeholder="ID de l'article">
+            </div>
+            <div class="form-group col" style="background:#000; padding:15px; border-radius:8px;">
+                <label style="color:white;">Lieu 2</label>
+                <input type="text" id="c2_t" placeholder="Titre" style="margin-bottom:10px;">
+                <input type="text" id="c2_s" placeholder="Sous-Titre" style="margin-bottom:10px;">
+                <input type="text" id="c2_d" placeholder="Distance" style="margin-bottom:10px;">
+                <input type="text" id="c2_i" placeholder="Lien Image" style="margin-bottom:10px;">
+                <input type="text" id="c2_l" placeholder="ID de l'article">
+            </div>
+            <div class="form-group col" style="background:#000; padding:15px; border-radius:8px;">
+                <label style="color:white;">Lieu 3</label>
+                <input type="text" id="c3_t" placeholder="Titre" style="margin-bottom:10px;">
+                <input type="text" id="c3_s" placeholder="Sous-Titre" style="margin-bottom:10px;">
+                <input type="text" id="c3_d" placeholder="Distance" style="margin-bottom:10px;">
+                <input type="text" id="c3_i" placeholder="Lien Image" style="margin-bottom:10px;">
+                <input type="text" id="c3_l" placeholder="ID de l'article">
+            </div>
+        </div>
+
+        <button class="btn-generer" onclick="generer()">✨ GÉNÉRER LA LIGNE (DATA.JS) ✨</button>
+
+        <div class="result-box" id="resultats">
+            <div class="result-title">✅ Copie cette ligne et ajoute-la dans <b>data.js</b></div>
+            <textarea class="code-output" id="outHtml" readonly></textarea>
+            <button class="btn-copy" onclick="copier('outHtml')">📋 Copier la ligne</button>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const dataToLoad = localStorage.getItem('projetAEditer');
+            if (dataToLoad) {
+                document.getElementById('inputImport').value = dataToLoad;
+                importerProjet();
+                localStorage.removeItem('projetAEditer'); 
+                document.getElementById('importBox').style.borderColor = "#4CAF50";
+            }
+        });
+
+        function ajouterBloc(type, contenu = "") {
+            const container = document.getElementById('builder-area');
+            const div = document.createElement('div');
+            div.className = `block-item ${type === 'image' ? 'img-block' : type === 'video' ? 'vid-block' : type === 'titre' ? 'title-block' : ''}`;
+            div.dataset.type = type;
+            let inner = `<button class="btn-supprimer" onclick="this.parentElement.remove()">❌</button>`;
+            if(type === 'texte') inner += `<div class="block-label">📝 Texte</div><textarea class="block-input" style="height: 100px;">${contenu}</textarea>`;
+            else if(type === 'image') inner += `<div class="block-label">🖼️ Image</div><input type="text" class="block-input" value="${contenu}">`;
+            else if(type === 'video') inner += `<div class="block-label">▶️ Vidéo Youtube</div><input type="text" class="block-input" value="${contenu}">`;
+            else if(type === 'titre') inner += `<div class="block-label">📌 Sous-Titre</div><input type="text" class="block-input" value="${contenu}">`;
+            div.innerHTML = inner; container.appendChild(div);
+        }
+
+        // --- LA FONCTION MAGIQUE QUI NE PLANTE PLUS JAMAIS ---
+        function importerProjet() {
+            try {
+                let code = document.getElementById('inputImport').value.trim();
+                if (!code) return; // Si c'est vide, on ne fait rien
+                
+                // Enlever la virgule à la fin si elle a été copiée
+                if(code.endsWith(',')) code = code.slice(0, -1);
+                
+                let projet;
+                try {
+                    // Test 1 : Lecture normale (Le JSON direct envoyé par guide.html)
+                    projet = JSON.parse(code);
+                } catch (e1) {
+                    try {
+                        // Test 2 : Lecture de l'ancien cryptage (Si tu as d'anciennes sauvegardes)
+                        let jsonStr = "";
+                        try { jsonStr = decodeURIComponent(atob(code)); } catch(e2) { jsonStr = decodeURIComponent(escape(atob(code))); }
+                        projet = JSON.parse(jsonStr);
+                    } catch (e3) {
+                        // Test 3 : Lecture de survie (Si tu as copié avec de vrais sauts de ligne depuis Discord)
+                        projet = eval('(' + code + ')');
+                    }
+                }
+                
+                document.getElementById('inputId').value = projet.id || ""; document.getElementById('inputCat').value = projet.categorie || "religion";
+                document.getElementById('inputTitre').value = projet.titre || ""; document.getElementById('inputSousTitre').value = projet.sousTitre || "";
+                document.getElementById('inputDesc').value = projet.desc || ""; document.getElementById('inputImg').value = projet.img || "";
+                document.getElementById('inputGalerie').value = projet.galerie || "";
+                
+                // Ligne modifiée : retrait de in_prep_assur
+                document.getElementById('in_prep_transport').value = projet.p_trans || ""; document.getElementById('in_prep_net').value = projet.p_net || ""; document.getElementById('in_prep_event').value = projet.p_evt || "";
+                
+                document.getElementById('in_place_quand').value = projet.s_quand || ""; document.getElementById('in_place_nom').value = projet.s_nom || "";
+                document.getElementById('in_place_horaire').value = projet.s_horaire || ""; document.getElementById('in_place_prix').value = projet.s_prix || "";
+                
+                document.getElementById('inputMeteo').value = projet.meteo || ""; document.getElementById('inputWeb').value = projet.web || "";
+                document.getElementById('inputLat').value = projet.lat || ""; document.getElementById('inputLng').value = projet.lng || "";
+                
+                if(projet.c1 && projet.c1.length>0) { document.getElementById('c1_t').value=projet.c1[0]||""; document.getElementById('c1_s').value=projet.c1[1]||""; document.getElementById('c1_d').value=projet.c1[2]||""; document.getElementById('c1_i').value=projet.c1[3]||""; document.getElementById('c1_l').value=projet.c1[4]||""; }
+                if(projet.c2 && projet.c2.length>0) { document.getElementById('c2_t').value=projet.c2[0]||""; document.getElementById('c2_s').value=projet.c2[1]||""; document.getElementById('c2_d').value=projet.c2[2]||""; document.getElementById('c2_i').value=projet.c2[3]||""; document.getElementById('c2_l').value=projet.c2[4]||""; }
+                if(projet.c3 && projet.c3.length>0) { document.getElementById('c3_t').value=projet.c3[0]||""; document.getElementById('c3_s').value=projet.c3[1]||""; document.getElementById('c3_d').value=projet.c3[2]||""; document.getElementById('c3_i').value=projet.c3[3]||""; document.getElementById('c3_l').value=projet.c3[4]||""; }
+                
+                document.getElementById('builder-area').innerHTML = ""; 
+                if(projet.blocs) projet.blocs.forEach(b => ajouterBloc(b.type, b.val));
+                
+            } catch (e) { 
+                alert("❌ Erreur : Copiez bien toute la ligne (de la première accolade { jusqu'à la dernière accolade })."); 
+            }
+        }
+
+        function generer() {
+            const id = document.getElementById('inputId').value; const titre = document.getElementById('inputTitre').value;
+            if(!id || !titre) return alert("❌ Il faut au moins remplir la case 'ID unique' et 'Titre de la page' !");
+            
+            const blocs = [];
+            document.querySelectorAll('.block-item').forEach(b => blocs.push({ type: b.dataset.type, val: b.querySelector('.block-input').value }));
+            
+            const projet = {
+                id: document.getElementById('inputId').value, categorie: document.getElementById('inputCat').value,
+                titre: document.getElementById('inputTitre').value, sousTitre: document.getElementById('inputSousTitre').value,
+                desc: document.getElementById('inputDesc').value, img: document.getElementById('inputImg').value, galerie: document.getElementById('inputGalerie').value,
+                
+                // Ligne modifiée : retrait de p_ass
+                p_trans: document.getElementById('in_prep_transport').value, p_net: document.getElementById('in_prep_net').value, p_evt: document.getElementById('in_prep_event').value,
+                
+                s_quand: document.getElementById('in_place_quand').value, s_nom: document.getElementById('in_place_nom').value, s_horaire: document.getElementById('in_place_horaire').value, s_prix: document.getElementById('in_place_prix').value, web: document.getElementById('inputWeb').value,
+                meteo: document.getElementById('inputMeteo').value, lat: document.getElementById('inputLat').value, lng: document.getElementById('inputLng').value,
+                c1: [document.getElementById('c1_t').value, document.getElementById('c1_s').value, document.getElementById('c1_d').value, document.getElementById('c1_i').value, document.getElementById('c1_l').value],
+                c2: [document.getElementById('c2_t').value, document.getElementById('c2_s').value, document.getElementById('c2_d').value, document.getElementById('c2_i').value, document.getElementById('c2_l').value],
+                c3: [document.getElementById('c3_t').value, document.getElementById('c3_s').value, document.getElementById('c3_d').value, document.getElementById('c3_i').value, document.getElementById('c3_l').value],
+                blocs: blocs
+            };
+
+            const jsonStr = JSON.stringify(projet) + ",";
+            document.getElementById('outHtml').value = jsonStr;
+            document.getElementById('resultats').style.display = 'block';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function copier(id) { document.getElementById(id).select(); document.execCommand("copy"); alert("✅ Ligne copiée ! Tu peux la coller dans data.js"); }
+</script>
+</body>
+</html>
