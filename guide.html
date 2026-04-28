@@ -6,6 +6,7 @@
     <title>Japan and Friends - Guide Culturel</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        /* ================= BASE ================= */
         :root {
             --bg-noir: #121212; --bg-gris-fonce: #1e1e1e;
             --texte-clair: #f5f5f5; --couleur-sakura: #ffb7c5;
@@ -14,32 +15,56 @@
         }
 
         body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; background-color: var(--bg-noir); color: var(--texte-clair); }
+        
+        /* ================= HEADER & LOGO ================= */
         header { background-color: var(--bg-gris-fonce); padding: 20px; text-align: center; border-bottom: 2px solid var(--couleur-sakura); position: relative;}
         header h1 { margin: 0; font-size: 32px; color: var(--couleur-sakura); }
         
-        .btn-login-admin { position: absolute; top: 20px; right: 20px; cursor: pointer; opacity: 0.3; transition: 0.3s; font-size: 20px; background: none; border: none; }
-        .btn-login-admin:hover { opacity: 1; transform: rotate(90deg); }
+        .logo-admin { 
+            position: absolute; top: 20px; left: 20px; 
+            height: 70px; width: 70px; object-fit: cover; 
+            border-radius: 50%; cursor: default; transition: 0.3s; 
+        }
 
-        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; background-color: #000; padding: 15px; }
+        /* ================= NAV & BURGER ================= */
+        .nav-container { background-color: #000; }
+        .menu-burger { 
+            display: none; background: transparent; color: var(--couleur-sakura); 
+            border: none; padding: 15px; font-size: 18px; cursor: pointer; 
+            width: 100%; text-align: center; font-weight: bold; border-bottom: 1px solid #333; 
+        }
+        .menu-burger:hover { background: #111; }
+        
+        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 15px; }
         nav a { color: var(--texte-clair); text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
         nav a:hover, nav a.actif { background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; }
 
+        /* ================= LAYOUT ================= */
         .layout-guide { display: flex; max-width: 1400px; margin: 30px auto; gap: 30px; padding: 0 20px; align-items: flex-start; }
         
+        /* ================= SIDEBAR & ACCORDÉON ================= */
         .sidebar-culture { flex: 0 0 280px; background: var(--bg-gris-fonce); border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); position: sticky; top: 20px; }
         .menu-category { margin-bottom: 25px; }
-        .menu-category h3 { color: var(--kanpai-rouge); font-size: 18px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--bordure-kanpai); padding-bottom: 8px; }
+        
+        .menu-category h3 { 
+            color: var(--kanpai-rouge); font-size: 18px; margin-top: 0; margin-bottom: 15px; 
+            border-bottom: 1px solid var(--bordure-kanpai); padding-bottom: 8px; 
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;
+        }
+        .arrow { font-size: 12px; transition: transform 0.3s; color: #888; display: none; } /* Cachée sur PC */
+        .menu-category h3.active .arrow { transform: rotate(180deg); color: var(--couleur-sakura); }
+
         .menu-list { list-style: none; padding: 0; margin: 0; }
         .menu-list li { margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 8px; }
         .menu-list a { color: #ccc; text-decoration: none; font-size: 15px; cursor: pointer; transition: 0.2s; display: block; }
         .menu-list a:hover, .menu-list a.actif-menu { color: var(--couleur-sakura); padding-left: 5px; font-weight: bold; }
 
+        /* ================= CONTENU & GRILLE ================= */
         .content-area { flex: 1; }
         .section-title { text-align: center; color: var(--texte-clair); font-size: 24px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 30px; }
         .section-title span { color: var(--kanpai-rouge); display: block; width: 50px; height: 4px; background-color: var(--kanpai-rouge); margin: 10px auto 0; }
 
         .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-        
         .lien-carte { text-decoration: none; color: inherit; display: block; height: 100%; cursor: pointer;}
         .article-card { background-color: var(--bg-gris-fonce); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.3s; display: flex; flex-direction: column; height: 100%; }
         .article-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.6); border: 1px solid var(--couleur-sakura); }
@@ -50,6 +75,7 @@
         .article-subtitle { margin: 0; font-size: 14px; color: #aaa; font-weight: bold; line-height: 1.4; }
         .article-desc { font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 20px; flex: 1; }
 
+        /* ================= OVERLAY ARTICLE ================= */
         #article-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-noir); z-index: 2000; overflow-y: auto; padding-bottom: 50px; }
         .overlay-header { position: sticky; top: 0; background: rgba(0,0,0,0.9); padding: 15px 20px; z-index: 3000; border-bottom: 2px solid var(--couleur-sakura); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); }
         .btn-retour { background: transparent; color: white; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
@@ -65,6 +91,7 @@
         .art-subtitle { text-align: center; font-size: 20px; color: #aaa; margin: 0 0 30px 0; }
         .title-separator { width: 60px; height: 5px; background: var(--kanpai-rouge); margin: 0 auto 30px auto; }
         
+        /* ... Le reste des styles de l'article (Textes, Galerie, Info, etc.) ... */
         .section-heading-inline { color: var(--kanpai-rouge); margin-top: 45px; border-bottom: 1px solid #333; padding-bottom: 8px; font-size: 24px;}
         .art-content p { line-height: 1.9; font-size: 16.5px; margin-bottom: 20px; color: #ccc; }
         .article-in-img { width: 100%; border-radius: 8px; margin: 25px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -92,19 +119,9 @@
 
         .map-weather-container { display: flex; gap: 20px; background: #222; padding: 20px; border-radius: 8px; border: 1px solid #333;}
         #map-solo { height: 350px; flex: 1; border-radius: 8px; border: 2px solid #444; z-index: 1;}
-       .weather-box { 
-            width: 350px; 
-            flex-shrink: 0; 
-            background: #111; 
-            border-radius: 8px; 
-            padding: 15px; 
-            border: 1px solid #333; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden;
-        }
-       
+        .weather-box { width: 350px; flex-shrink: 0; background: #111; border-radius: 8px; padding: 15px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; overflow: hidden;}
+        .weather-box > div { width: 100% !important; max-width: 100% !important; }
+
         .carousel-container { display: flex; gap: 20px; overflow-x: auto; padding: 10px 5px 20px 5px; scroll-snap-type: x mandatory; }
         .carousel-container::-webkit-scrollbar { height: 8px; }
         .carousel-container::-webkit-scrollbar-track { background: #222; border-radius: 10px; }
@@ -129,9 +146,29 @@
         .btn-create-floating { display: none; position: fixed; bottom: 20px; left: 20px; background: var(--couleur-sakura); color: black; border: none; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 1500; transition: 0.3s; border: 2px solid transparent;}
         .btn-create-floating:hover { background: #e6c800; transform: scale(1.05); }
 
+        /* ================= RESPONSIVE MOBILE ================= */
         @media (max-width: 900px) {
-            .layout-guide { flex-direction: column; }
-            .sidebar-culture { width: 100%; box-sizing: border-box; position: static; flex: none; }
+            /* Logo & Header */
+            .logo-admin { height: 50px; width: 50px; top: 10px; left: 10px; position: relative; display: block; margin: 0 auto 10px auto; }
+            header { padding: 10px; }
+            
+            /* Burger Menu */
+            .menu-burger { display: block; }
+            nav { display: none; flex-direction: column; padding: 0; width: 100%; }
+            nav.show-nav { display: flex; }
+            nav a { border-radius: 0; border-bottom: 1px solid #222; padding: 15px; width: 100%; box-sizing: border-box; text-align: center; font-size: 16px;}
+            
+            /* Accordéon Sidebar */
+            .arrow { display: inline-block; }
+            .menu-list { display: none; }
+            .menu-list.open { display: block; margin-bottom: 15px; }
+            
+            /* Mise en page globale */
+            .layout-guide { flex-direction: column; margin-top: 15px; }
+            .sidebar-culture { width: 100%; box-sizing: border-box; position: static; flex: none; padding: 15px; }
+            .menu-category { margin-bottom: 10px; }
+            
+            /* Article */
             .art-container { padding: 20px; margin-top: 0; border-radius: 0; border: none;} 
             .art-banner { height: 250px; } 
             .photo-gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; } 
@@ -148,20 +185,23 @@
     <script src="data.js"></script>
 
     <header>
+        <img src="japan and friends.png" alt="Logo" class="logo-admin" onclick="loginAdmin()">
         <h1>Japan and Friends</h1>
         <p>Le Grand Guide Culturel du Japon</p>
-        <button class="btn-login-admin" onclick="loginAdmin()" title="Espace Administrateur">⚙️</button>
     </header>
 
-    <nav>
-        <a href="index.html">Carte & Activités</a>
-        <a href="vocabulaire.html">Mots Utiles</a>
-        <a href="convertisseur.html">Convertisseur Yen/Euro</a>
-        <a href="infos.html">Bons Plans & Transports</a>
-        <a href="budget.html">Mon Solde</a>
-        <a href="roadtrip.html">Itinéraire 90 Jours</a>
-        <a href="guide.html" class="actif">Guide Culturel</a>
-    </nav>
+    <div class="nav-container">
+        <button class="menu-burger" onclick="toggleNav()">☰ Menu Principal</button>
+        <nav id="main-nav">
+            <a href="index.html">Carte & Activités</a>
+            <a href="vocabulaire.html">Mots Utiles</a>
+            <a href="convertisseur.html">Convertisseur Yen/Euro</a>
+            <a href="infos.html">Bons Plans & Transports</a>
+            <a href="budget.html">Mon Solde</a>
+            <a href="roadtrip.html">Itinéraire 90 Jours</a>
+            <a href="guide.html" class="actif">Guide Culturel</a>
+        </nav>
+    </div>
 
     <button class="btn-create-floating" id="btn-create-new" onclick="window.location.href='admin_guide.html'">➕ Créer un article</button>
 
@@ -231,6 +271,33 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // ================= JAVASCRIPT: BURGER & ACCORDÉON =================
+        
+        // Fonction pour ouvrir/fermer le menu principal sur mobile
+        function toggleNav() {
+            document.getElementById('main-nav').classList.toggle('show-nav');
+        }
+
+        // Ajout des flèches et du système d'accordéon au chargement
+        window.addEventListener('DOMContentLoaded', () => {
+            const categories = document.querySelectorAll('.menu-category h3');
+            categories.forEach(h3 => {
+                // On ajoute la petite flèche dans le HTML du titre
+                h3.innerHTML += '<span class="arrow">▼</span>';
+                
+                // Au clic, on plie ou déplie la liste
+                h3.addEventListener('click', () => {
+                    if (window.innerWidth <= 900) { // Uniquement sur téléphone !
+                        h3.classList.toggle('active'); // Fait tourner la flèche
+                        const ul = h3.nextElementSibling;
+                        if (ul) ul.classList.toggle('open'); // Affiche ou cache la liste
+                    }
+                });
+            });
+        });
+
+        // ================= LE RESTE DU CODE (INCHANGÉ) =================
+
         function loginAdmin() {
             if (localStorage.getItem('auth-token')) {
                 if(confirm("Désactiver le mode Administrateur ?")) {
@@ -247,8 +314,7 @@
 
         if (localStorage.getItem('auth-token')) {
             document.getElementById('btn-create-new').style.display = 'block';
-            document.querySelector('.btn-login-admin').style.opacity = '1';
-            document.querySelector('.btn-login-admin').style.color = '#ffb7c5';
+            document.querySelector('.logo-admin').style.filter = 'drop-shadow(0px 0px 8px #ffb7c5)';
         }
 
         function chargerArticles(categorieRecherchee) {
@@ -307,24 +373,31 @@
             if (art.meteo || (art.lat && art.lng)) {
                 infoHtml = `<div class="kanpai-section-title"><h2>Informations</h2><div class="sep"></div></div><div class="map-weather-container">`;
                 if(art.lat && art.lng) infoHtml += `<div id="map-solo"></div>`;
-                if(art.meteo) infoHtml += `<div class="weather-box">${art.meteo}</div>`; infoHtml += `</div>`;
+                if(art.meteo) infoHtml += `<div class="weather-box" id="box-meteo"></div>`; 
+                infoHtml += `</div>`;
             }
             document.getElementById('art-info').innerHTML = infoHtml;
-document.getElementById('art-info').innerHTML = infoHtml; // Ta ligne actuelle
 
-            // --- NOUVEAU CODE : Pour forcer le navigateur à lire le script météo ---
-            let boiteInfo = document.getElementById('art-info');
-            let scriptsMeteo = boiteInfo.querySelectorAll('script');
-            scriptsMeteo.forEach(ancienScript => {
-                let nouveauScript = document.createElement('script');
-                // On copie les informations du script (le lien src, async, etc.)
-                Array.from(ancienScript.attributes).forEach(attr => nouveauScript.setAttribute(attr.name, attr.value));
-                // On copie le contenu s'il y en a
-                nouveauScript.appendChild(document.createTextNode(ancienScript.innerHTML));
-                // On remplace le script bloqué par notre nouveau script tout neuf !
-                ancienScript.parentNode.replaceChild(nouveauScript, ancienScript);
-            });
-            // ------------------------------------------------------------------------
+            if (art.meteo) {
+                try {
+                    let boiteMeteo = document.getElementById('box-meteo');
+                    if (boiteMeteo) {
+                        let temp = document.createElement('div');
+                        temp.innerHTML = art.meteo;
+                        let oldScript = temp.querySelector('script');
+                        let srcScript = oldScript ? oldScript.src : null;
+                        if (oldScript) oldScript.remove();
+                        boiteMeteo.innerHTML = temp.innerHTML;
+                        if (srcScript) {
+                            let newScript = document.createElement('script');
+                            newScript.src = srcScript;
+                            newScript.async = true;
+                            document.body.appendChild(newScript);
+                        }
+                    }
+                } catch (erreur) { console.error("Erreur widget ignorée :", erreur); }
+            }
+
             let placeHtml = "";
             if (art.s_quand || art.s_nom || art.s_horaire || art.s_prix || art.web) {
                 placeHtml = `<div class="kanpai-section-title"><span class="icon">⛩️</span><h2>Sur Place</h2><div class="sep"></div></div><div class="pratique-section">`;
@@ -348,7 +421,6 @@ document.getElementById('art-info').innerHTML = infoHtml; // Ta ligne actuelle
             if (localStorage.getItem('auth-token')) {
                 document.getElementById('btn-edit-art').style.display = 'block';
                 document.getElementById('btn-edit-art').onclick = () => { 
-                    // ENVOI DU JSON PUR (Plus de cryptage problématique)
                     localStorage.setItem('projetAEditer', JSON.stringify(art)); 
                     window.location.href = 'admin_guide.html'; 
                 };
