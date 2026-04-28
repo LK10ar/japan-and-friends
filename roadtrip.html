@@ -21,8 +21,12 @@
         header { background-color: var(--bg-gris-fonce); padding: 20px; text-align: center; position: relative; border-bottom: 2px solid var(--couleur-sakura); z-index: 1000; }
         header h1 { margin: 0; font-size: 32px; color: var(--couleur-sakura); }
         
-        .lang-selector { position: absolute; top: 20px; left: 20px; }
-        .lang-selector select { padding: 5px; border-radius: 4px; background-color: var(--bg-noir); color: var(--texte-clair); cursor: pointer; }
+        /* ================= LOGO ================= */
+        .logo-static { 
+            position: absolute; top: 20px; left: 20px; 
+            height: 70px; width: 70px; object-fit: cover; 
+            border-radius: 50%; 
+        }
         
         /* Contrôles Utilisateur (Connecté) */
         .user-controls { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; align-items: center; }
@@ -30,7 +34,16 @@
         .btn-logout { padding: 5px 10px; border-radius: 4px; background-color: #ff4c4c; color: white; border: none; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-logout:hover { background-color: #c62828; }
 
-        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; background-color: #000; padding: 15px; position: relative; z-index: 1000; }
+        /* ================= NAV & BURGER ================= */
+        .nav-container { background-color: #000; position: relative; z-index: 1000;}
+        .menu-burger { 
+            display: none; background: transparent; color: var(--couleur-sakura); 
+            border: none; padding: 15px; font-size: 18px; cursor: pointer; 
+            width: 100%; text-align: center; font-weight: bold; border-bottom: 1px solid #333; 
+        }
+        .menu-burger:hover { background: #111; }
+
+        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 15px; }
         nav a { color: var(--texte-clair); text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
         nav a:hover { background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; }
 
@@ -97,6 +110,25 @@
             .layout-pro { flex-wrap: wrap; }
             .sidebar { flex: 1 1 100%; height: auto; max-height: 400px; }
             .map-wrapper { order: -1; width: 100%; }
+
+            /* Logo & Header */
+            .logo-static { height: 50px; width: 50px; top: 10px; left: 10px; position: relative; display: block; margin: 0 auto 10px auto; }
+            header { padding: 10px; }
+            
+            /* --- NOUVEAU : Contrôles Utilisateur sur Téléphone --- */
+            .user-controls { 
+                flex-direction: column-reverse; /* Place le pseudo en dessous du bouton */
+                align-items: flex-end; /* Aligne le texte et le bouton sur la droite */
+                top: 10px; 
+                right: 10px; 
+                gap: 5px; 
+            }
+
+            /* Burger Menu */
+            .menu-burger { display: block; }
+            nav { display: none; flex-direction: column; padding: 0; width: 100%; }
+            nav.show-nav { display: flex; }
+            nav a { border-radius: 0; border-bottom: 1px solid #222; padding: 15px; width: 100%; box-sizing: border-box; text-align: center; font-size: 16px;}
         }
     </style>
 </head>
@@ -117,11 +149,8 @@
     </div>
 
     <header>
-        <div class="lang-selector">
-            <select id="langSwitch">
-                <option value="fr">Français</option><option value="en">English</option>
-            </select>
-        </div>
+        <img src="japan and friends.png" alt="Logo" class="logo-static">
+        
         <div class="user-controls" id="userControls" style="display: none;">
             <span class="user-greeting" id="displayUsername"></span>
             <button class="btn-logout" onclick="seDeconnecter()">Déconnexion</button>
@@ -130,15 +159,18 @@
         <p>Mon Roadtrip Interactif</p>
     </header>
 
-    <nav>
-        <a href="index.html">Carte & Activités</a>
-        <a href="vocabulaire.html">Mots Utiles</a>
-        <a href="convertisseur.html">Convertisseur Yen/Euro</a>
-        <a href="infos.html">Bons Plans & Transports</a>
-        <a href="budget.html">Mon Solde</a>
-        <a href="roadtrip.html">Itinéraire 90 Jours</a>
-        <a href="guide.html">Guide Culturel</a>
-    </nav>
+    <div class="nav-container">
+        <button class="menu-burger" onclick="toggleNav()">☰ Menu Principal</button>
+        <nav id="main-nav">
+            <a href="index.html">Carte & Activités</a>
+            <a href="vocabulaire.html">Mots Utiles</a>
+            <a href="convertisseur.html">Convertisseur Yen/Euro</a>
+            <a href="infos.html">Bons Plans & Transports</a>
+            <a href="budget.html">Mon Solde</a>
+            <a href="roadtrip.html">Itinéraire 90 Jours</a>
+            <a href="guide.html">Guide Culturel</a>
+        </nav>
+    </div>
 
     <div class="layout-pro">
         
@@ -211,7 +243,12 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     
     <script>
-        // ⚠️ TON URL RENDER (Désormais on pointe sur la racine /api)
+        // --- JAVASCRIPT : MENU BURGER ---
+        function toggleNav() {
+            document.getElementById('main-nav').classList.toggle('show-nav');
+        }
+
+        // --- RESTE DU SCRIPT ---
         const URL_API = 'https://japan-f537.onrender.com/api';
         
         let currentUser = null; 
@@ -228,7 +265,8 @@
                 authToken = savedToken;
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('userControls').style.display = 'flex';
-                document.getElementById('displayUsername').innerText = `👋 Salut ${currentUser} !`;
+                // Le pseudo s'affiche maintenant seul, sans "Salut 👋"
+                document.getElementById('displayUsername').innerText = currentUser;
                 chargerDonnees(); 
             }
         }
