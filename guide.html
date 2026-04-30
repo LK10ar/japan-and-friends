@@ -406,13 +406,38 @@
             }
             document.getElementById('art-surplace').innerHTML = placeHtml;
 
+            // --- NOUVEAU CARROUSEL ALÉATOIRE ---
+            // 1. On filtre pour exclure l'article actuellement ouvert
+            let autresArticles = baseArticles.filter(a => a.id !== art.id);
+
+            // 2. On mélange le tableau aléatoirement
+            autresArticles.sort(() => 0.5 - Math.random());
+
+            // 3. On ne garde que les 3 premiers résultats
+            let articlesAleatoires = autresArticles.slice(0, 3);
+
+            // 4. On construit le HTML s'il y a bien des articles à proposer
             let carHtml = "";
-            if (art.c1 && art.c1[0]) {
-                carHtml = `<div class="kanpai-section-title"><span class="icon">🧭</span><h2>Que voir autour ?</h2><div class="sep"></div></div><div class="carousel-container">`;
-                [art.c1, art.c2, art.c3].forEach(c => { if(c && c[0]) { carHtml += `<div onclick="openArticle('${c[4]}')" class="carousel-card"><div class="card-img-wrapper"><span class="card-distance">📍 à ~${c[2]}</span><img src="${c[3]}"></div><div class="card-body"><h5 class="card-title">${c[0]}</h5><div class="card-subtitle">${c[1]}</div></div></div>`; } });
+            if (articlesAleatoires.length > 0) {
+                carHtml = `<div class="kanpai-section-title"><span class="icon">🎲</span><h2>À découvrir aussi</h2><div class="sep"></div></div><div class="carousel-container">`;
+                
+                articlesAleatoires.forEach(c => {
+                    carHtml += `
+                    <div onclick="openArticle('${c.id}')" class="carousel-card">
+                        <div class="card-img-wrapper">
+                            <span class="card-distance">✨ Recommandé</span>
+                            <img src="${c.img}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Skyscrapers_of_Shinjuku_2009_January.jpg/300px-Skyscrapers_of_Shinjuku_2009_January.jpg'">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">${c.titre}</h5>
+                            <div class="card-subtitle">${c.sousTitre}</div>
+                        </div>
+                    </div>`;
+                });
                 carHtml += `</div>`;
             }
             document.getElementById('art-carousel').innerHTML = carHtml;
+            // -----------------------------------
 
             document.getElementById('article-overlay').style.display = 'block'; document.body.style.overflow = 'hidden';
             if (mapSolo) { mapSolo.remove(); mapSolo = null; }
