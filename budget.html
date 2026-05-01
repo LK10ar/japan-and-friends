@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan and Friends - Budget & Planification</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <style>
+        /* ================= BASE ================= */
+        :root {
+            --bg-noir: #121212; --bg-gris-fonce: #1e1e1e;
+            --texte-clair: #f5f5f5; --couleur-sakura: #ffb7c5;
+            --texte-fonce: #121212; --kanpai-rouge: #c62828;
+            --bordure-kanpai: #444; --vert-positif: #4CAF50; --rouge-negatif: #ff5252;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; background-color: var(--bg-noir); color: var(--texte-clair); overflow-x: hidden; }
+        
+        /* ================= HEADER & LOGO ================= */
+        header { background-color: var(--bg-gris-fonce); padding: 20px; text-align: center; border-bottom: 2px solid var(--couleur-sakura); position: relative;}
+        header h1 { margin: 0; font-size: 32px; color: var(--couleur-sakura); }
+        .logo-static { position: absolute; top: 20px; left: 20px; height: 70px; width: 70px; object-fit: cover; border-radius: 50%; cursor: default; }
+
+        /* Contrôles Utilisateur (Connecté) */
+        .user-controls { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; align-items: center; }
+        .user-greeting { font-weight: bold; color: var(--couleur-sakura); }
+        .btn-logout { padding: 5px 10px; border-radius: 4px; background-color: #ff4c4c; color: white; border: none; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-logout:hover { background-color: #c62828; }
+
+        /* ================= MODAL DE CONNEXION SÉCURISÉ ================= */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .login-box { background: var(--bg-gris-fonce); padding: 40px; border-radius: 12px; border: 2px solid var(--couleur-sakura); text-align: center; box-shadow: 0 0 30px rgba(255,183,197,0.3); width: 100%; max-width: 350px; }
+        .login-box h2 { color: var(--couleur-sakura); margin-top: 0; }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 25px; border: 1px solid var(--couleur-sakura); background: var(--bg-noir); color: white; font-size: 16px; box-sizing: border-box; text-align: center; }
+        .login-box button { width: 100%; padding: 12px; border-radius: 25px; border: none; background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .login-box button:hover { background-color: white; }
+
+        /* ================= NAV & BURGER ================= */
+        .nav-container { background-color: #000; position: relative; z-index: 1000;}
+        .menu-burger { display: none; background: transparent; color: var(--couleur-sakura); border: none; padding: 15px; font-size: 18px; cursor: pointer; width: 100%; text-align: center; font-weight: bold; border-bottom: 1px solid #333; }
+        .menu-burger:hover { background: #111; }
+        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 15px; }
+        nav a { color: var(--texte-clair); text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
+        nav a:hover, nav a.actif { background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; }
+
+        /* ================= GESTIONNAIRE DE BUDGET ================= */
+        .budget-wrapper { max-width: 1600px; margin: 40px auto; padding: 0 20px; }
+        .section-title { color: var(--couleur-sakura); text-align: center; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 30px; font-size: 28px;}
+        
+        .dashboard { display: flex; gap: 20px; margin-bottom: 30px; }
+        .dash-card { flex: 1; background: var(--bg-gris-fonce); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid var(--bordure-kanpai); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .dash-card h3 { margin: 0 0 10px 0; font-size: 16px; color: #aaa; text-transform: uppercase; }
+        .dash-card p { margin: 0; font-size: 28px; font-weight: bold; }
+        #solde-restant { color: var(--vert-positif); }
+
+        .app-layout { display: flex; gap: 30px; align-items: stretch; }
+        .left-panel { flex: 0 0 450px; display: flex; flex-direction: column; gap: 20px; }
+        .right-panel { flex: 1; display: flex; flex-direction: column; }
+
+        .form-box { background: var(--bg-gris-fonce); padding: 25px; border-radius: 12px; border: 1px solid var(--bordure-kanpai); }
+        .form-box h3 { margin-top: 0; color: white; border-bottom: 2px solid var(--couleur-sakura); padding-bottom: 10px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: #ccc; font-size: 14px; font-weight: bold; }
+        .input-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #555; background: var(--bg-noir); color: white; box-sizing: border-box; font-size: 16px; outline: none; }
+        .input-group input:focus { border-color: var(--couleur-sakura); }
+        
+        .btn-action { width: 100%; padding: 12px; background: var(--couleur-sakura); color: var(--texte-fonce); border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .btn-action:hover { background: white; box-shadow: 0 0 15px rgba(255,183,197,0.5); }
+
+        .expenses-list-container { flex: 1; background: var(--bg-gris-fonce); padding: 25px; border-radius: 12px; border: 1px solid var(--bordure-kanpai); overflow-y: auto; max-height: 500px; }
+        .expenses-list-container h3 { margin-top: 0; color: white; border-bottom: 2px solid var(--couleur-sakura); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        .expense-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-noir); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--kanpai-rouge); }
+        .expense-info strong { display: block; font-size: 16px; color: white; }
+        .expense-amount { font-weight: bold; font-size: 18px; color: var(--rouge-negatif); margin-right: 15px; }
+        .btn-delete { background: transparent; color: #888; border: none; font-size: 20px; cursor: pointer; transition: 0.2s; }
+        .btn-delete:hover { color: var(--rouge-negatif); }
+        .sync-status { font-size: 12px; font-weight: normal; color: #aaa; }
+
+        /* ================= CARTE INTERACTIVE ================= */
+        #map-budget { width: 100%; height: 100%; min-height: 600px; border-radius: 12px; border: 2px solid #333; box-shadow: 0 8px 16px rgba(0,0,0,0.5); z-index: 1; }
+        .kanpai-cluster { background-color: rgba(198, 40, 40, 0.85); border: 3px solid #ff5252; color: white; font-weight: bold; font-size: 16px; border-radius: 50%; text-align: center; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 82, 82, 0.6); }
+        .emoji-marker { display: flex; align-items: center; justify-content: center; font-size: 24px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        .leaflet-popup-content-wrapper { background-color: var(--bg-gris-fonce); color: var(--texte-clair); border: 2px solid var(--couleur-sakura); border-radius: 12px; }
+        .leaflet-popup-tip { background-color: var(--couleur-sakura); }
+        .popup-body { padding: 10px; text-align: center; }
+        .popup-title { font-size: 16px; color: var(--couleur-sakura); margin: 0 0 10px 0; }
+        .popup-price { font-size: 14px; color: #ccc; margin-bottom: 15px; }
+        .popup-btn { width: 100%; padding: 8px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; color: var(--texte-fonce); background-color: var(--couleur-sakura); transition: 0.3s; }
+        .popup-btn:hover { background-color: white; }
+
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 1100px) {
+            .app-layout { flex-direction: column; }
+            .left-panel { flex: none; width: 100%; }
+            #map-budget { min-height: 450px; }
+            .logo-static { height: 50px; width: 50px; top: 10px; left: 10px; position: relative; display: block; margin: 0 auto 10px auto; }
+            header { padding: 10px; }
+            .user-controls { flex-direction: column-reverse; align-items: flex-end; top: 10px; right: 10px; gap: 5px; }
+            .menu-burger { display: block; }
+            nav { display: none; flex-direction: column; padding: 0; width: 100%; }
+            nav.show-nav { display: flex; }
+            nav a { border-radius: 0; border-bottom: 1px solid #222; padding: 15px; width: 100%; box-sizing: border-box; text-align: center; font-size: 16px;}
+            .dashboard { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- FENÊTRE DE CONNEXION -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>🌸 Espace Privé</h2>
+            <p style="color: #ccc; font-size: 14px;">Connecte-toi pour gérer et sauvegarder ton budget.</p>
+            <input type="text" id="usernameInput" placeholder="Ton Pseudo (ex: Leo)">
+            <input type="password" id="passwordInput" placeholder="Ton Mot de passe">
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="seConnecter()" style="flex: 1;">Connexion</button>
+                <button onclick="sInscrire()" style="flex: 1; background-color: #444; color: white;">S'inscrire</button>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <img src="japan and friends.png" alt="Logo" class="logo-static">
+        <div class="user-controls" id="userControls" style="display: none;">
+            <span class="user-greeting" id="displayUsername"></span>
+            <button class="btn-logout" onclick="seDeconnecter()">Déconnexion</button>
+        </div>
+        <h1>Japan and Friends</h1>
+        <p>Le Grand Guide Culturel du Japon</p>
+    </header>
+
+    <div class="nav-container">
+        <button class="menu-burger" onclick="toggleNav()">☰ Menu Principal</button>
+        <nav id="main-nav">
+            <a href="index.html">Carte & Activités</a>
+            <a href="vocabulaire.html">Mots Utiles</a>
+            <a href="convertisseur.html">Convertisseur Yen/Euro</a>
+            <a href="infos.html">Bons Plans & Transports</a>
+            <a href="budget.html" class="actif">Mon Solde</a>
+            <a href="roadtrip.html">Itinéraire 90 Jours</a>
+            <a href="guide.html">Guide Culturel</a>
+        </nav>
+    </div>
+
+    <main class="budget-wrapper">
+        <h2 class="section-title">📊 Planification & Budget</h2>
+
+        <div class="dashboard">
+            <div class="dash-card">
+                <h3>Budget Total</h3>
+                <p id="affichage-budget">0 ¥</p>
+            </div>
+            <div class="dash-card">
+                <h3>Dépenses Estimées</h3>
+                <p id="affichage-depenses" style="color: var(--rouge-negatif);">0 ¥</p>
+            </div>
+            <div class="dash-card">
+                <h3>Solde Restant</h3>
+                <p id="solde-restant">0 ¥</p>
+            </div>
+        </div>
+
+        <div class="app-layout">
+            <div class="left-panel">
+                <div class="form-box">
+                    <h3>💰 Définir mon budget</h3>
+                    <div class="input-group">
+                        <label>Montant total (en Yen)</label>
+                        <input type="number" id="input-budget-total" placeholder="Ex: 200000">
+                    </div>
+                    <button class="btn-action" onclick="definirBudget()">Mettre à jour</button>
+                </div>
+
+                <div class="form-box">
+                    <h3>🛒 Ajout Manuel</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="input-group" style="flex: 2;">
+                            <input type="text" id="input-nom-depense" placeholder="Nom (ex: Souvenirs)">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <input type="number" id="input-cout-depense" placeholder="Coût (¥)">
+                        </div>
+                    </div>
+                    <button class="btn-action" onclick="ajouterDepense()" style="background-color: var(--kanpai-rouge); color: white; padding: 8px;">Ajouter</button>
+                </div>
+
+                <div class="expenses-list-container">
+                    <h3>📝 Ma liste <span class="sync-status" id="sync-status">☁️ Synchronisé</span></h3>
+                    <div id="liste-depenses"></div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <p style="margin-top: 0; color: #ccc;">💡 <em>Clique sur un point de la carte pour l'ajouter automatiquement à ton budget avec une estimation de prix.</em></p>
+                <div id="map-budget"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+    <script>
+        // ================= CONNEXION ET API =================
+        const URL_API = 'https://japan-f537.onrender.com/api';
+        let currentUser = null; 
+        let authToken = null;
+
+        function toggleNav() { document.getElementById('main-nav').classList.toggle('show-nav'); }
+
+        async function verifierConnexion() {
+            const savedUser = localStorage.getItem('roadtripUser');
+            const savedToken = localStorage.getItem('auth-token');
+            
+            if (savedUser && savedToken) {
+                currentUser = savedUser;
+                authToken = savedToken;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('userControls').style.display = 'flex';
+                document.getElementById('displayUsername').innerText = currentUser;
+                await chargerBudgetServeur(); // On charge les données depuis le serveur
+            } else {
+                // Mode hors ligne / non connecté, on charge le local par défaut
+                mettreAJourUI();
+            }
+        }
+
+        async function sInscrire() {
+            const user = document.getElementById('usernameInput').value.trim();
+            const pass = document.getElementById('passwordInput').value.trim();
+            if (user.length < 3 || pass.length < 3) return alert("Ton pseudo et mot de passe doivent faire au moins 3 caractères !");
+
+            try {
+                const response = await fetch(`${URL_API}/register`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                if (response.ok) alert("✅ Compte créé ! Clique sur Connexion.");
+                else alert("❌ Erreur : " + await response.text());
+            } catch (error) { alert("Impossible de joindre le serveur."); }
+        }
+
+        async function seConnecter() {
+            const user = document.getElementById('usernameInput').value.trim();
+            const pass = document.getElementById('passwordInput').value.trim();
+            if (!user || !pass) return alert("Remplis tous les champs !");
+
+            try {
+                const response = await fetch(`${URL_API}/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('auth-token', data.token);
+                    localStorage.setItem('roadtripUser', data.username);
+                    verifierConnexion();
+                } else alert("❌ Accès refusé.");
+            } catch (error) { alert("Impossible de joindre le serveur."); }
+        }
+
+        function seDeconnecter() {
+            localStorage.removeItem('roadtripUser');
+            localStorage.removeItem('auth-token');
+            currentUser = null; authToken = null; 
+            // On remet à zéro la vue
+            budgetTotal = 0; listeDepenses = [];
+            mettreAJourUI(); 
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('userControls').style.display = 'none';
+            document.getElementById('passwordInput').value = '';
+        }
+
+        // ================= LOGIQUE DU BUDGET =================
+        let budgetTotal = localStorage.getItem('monBudgetTotal') ? parseFloat(localStorage.getItem('monBudgetTotal')) : 0;
+        let listeDepenses = localStorage.getItem('mesDepenses') ? JSON.parse(localStorage.getItem('mesDepenses')) : [];
+
+        // Fonction pour récupérer les données du serveur
+        async function chargerBudgetServeur() {
+            if(!authToken) return;
+            try {
+                const res = await fetch(`${URL_API}/budget`, { headers: { 'auth-token': authToken } });
+                if(res.ok) {
+                    const data = await res.json();
+                    // On met à jour nos variables avec les données du serveur
+                    if(data.budgetTotal !== undefined) budgetTotal = data.budgetTotal;
+                    if(data.depenses && Array.isArray(data.depenses)) listeDepenses = data.depenses;
+                    // Sauvegarde locale de secours
+                    localStorage.setItem('monBudgetTotal', budgetTotal);
+                    localStorage.setItem('mesDepenses', JSON.stringify(listeDepenses));
+                }
+            } catch(e) { console.log("Utilisation des données locales."); }
+            mettreAJourUI();
+        }
+
+        // Fonction pour envoyer les données au serveur
+        async function sauvegarderBudgetServeur() {
+            // Sauvegarde locale quoi qu'il arrive
+            localStorage.setItem('monBudgetTotal', budgetTotal);
+            localStorage.setItem('mesDepenses', JSON.stringify(listeDepenses));
+
+            if(!authToken) return; // Si pas connecté, on s'arrête là
+
+            document.getElementById('sync-status').innerText = "⏳ Synchronisation...";
+            try {
+                const res = await fetch(`${URL_API}/budget`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'auth-token': authToken },
+                    body: JSON.stringify({ budgetTotal: budgetTotal, depenses: listeDepenses })
+                });
+                if(res.ok) document.getElementById('sync-status').innerText = "☁️ Sauvegardé en ligne";
+                else document.getElementById('sync-status').innerText = "⚠️ Erreur serveur";
+            } catch(e) {
+                document.getElementById('sync-status').innerText = "⚠️ Hors ligne";
+            }
+        }
+
+        function mettreAJourUI() {
+            let totalDepenses = 0;
+            listeDepenses.forEach(depense => { totalDepenses += depense.cout; });
+            let soldeRestant = budgetTotal - totalDepenses;
+
+            document.getElementById('affichage-budget').innerText = budgetTotal.toLocaleString() + " ¥";
+            document.getElementById('affichage-depenses').innerText = totalDepenses.toLocaleString() + " ¥";
+            document.getElementById('solde-restant').innerText = soldeRestant.toLocaleString() + " ¥";
+
+            const elementSolde = document.getElementById('solde-restant');
+            elementSolde.style.color = (soldeRestant < 0) ? 'var(--rouge-negatif)' : 'var(--vert-positif)';
+
+            const conteneurListe = document.getElementById('liste-depenses');
+            conteneurListe.innerHTML = ''; 
+            
+            if (listeDepenses.length === 0) {
+                conteneurListe.innerHTML = '<p style="color:#aaa; font-style:italic; text-align:center;">Aucune dépense. Explore la carte !</p>';
+            } else {
+                listeDepenses.forEach((depense, index) => {
+                    conteneurListe.innerHTML += `
+                        <div class="expense-item">
+                            <div class="expense-info"><strong>${depense.nom}</strong></div>
+                            <div style="display:flex; align-items:center;">
+                                <span class="expense-amount">- ${depense.cout.toLocaleString()} ¥</span>
+                                <button class="btn-delete" onclick="supprimerDepense(${index})" title="Supprimer">✖</button>
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+
+        function definirBudget() {
+            const inputMontant = document.getElementById('input-budget-total').value;
+            if (inputMontant !== "") {
+                budgetTotal = parseFloat(inputMontant);
+                document.getElementById('input-budget-total').value = ""; 
+                mettreAJourUI(); 
+                sauvegarderBudgetServeur(); // On déclenche la sauvegarde sur le serveur
+            }
+        }
+
+        function ajouterDepense() {
+            const nom = document.getElementById('input-nom-depense').value;
+            const cout = document.getElementById('input-cout-depense').value;
+            if (nom !== "" && cout !== "") {
+                listeDepenses.push({ nom: nom, cout: parseFloat(cout) });
+                document.getElementById('input-nom-depense').value = "";
+                document.getElementById('input-cout-depense').value = "";
+                mettreAJourUI();
+                sauvegarderBudgetServeur(); // On déclenche la sauvegarde
+            }
+        }
+
+        window.ajouterDepenseRapide = function(nomPredefini, coutPredefini) {
+            listeDepenses.push({ nom: nomPredefini, cout: parseFloat(coutPredefini) });
+            mettreAJourUI();
+            sauvegarderBudgetServeur(); // On déclenche la sauvegarde
+        };
+
+        function supprimerDepense(index) {
+            listeDepenses.splice(index, 1);
+            mettreAJourUI(); 
+            sauvegarderBudgetServeur(); // On déclenche la sauvegarde
+        }
+
+        // ================= CARTE INTERACTIVE =================
+        const map = L.map('map-budget').setView([36.2048, 138.2529], 6);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+        let groupeClusters = L.markerClusterGroup({
+            iconCreateFunction: function(cluster) {
+                let nombre = cluster.getChildCount();
+                let taille = nombre < 50 ? 40 : nombre < 500 ? 55 : nombre < 2000 ? 70 : 85;
+                return L.divIcon({ html: `<div>${nombre}</div>`, className: 'kanpai-cluster', iconSize: L.point(taille, taille) });
+            },
+            spiderfyOnMaxZoom: true, showCoverageOnHover: false, chunkedLoading: true
+        });
+        map.addLayer(groupeClusters);
+
+        const configLieux = {
+            'temple':  { emoji: '⛩️', prix: 500, label: 'Temple / Sanctuaire' },
+            'parc':    { emoji: '🌳', prix: 0, label: 'Parc (Gratuit)' },
+            'chateau': { emoji: '🏯', prix: 600, label: 'Château Historique' },
+            'rando':   { emoji: '🥾', prix: 0, label: 'Randonnée' },
+            'obs':     { emoji: '🔭', prix: 1000, label: 'Observatoire' },
+            'onsen':   { emoji: '♨️', prix: 800, label: 'Bain Public' },
+            'plage':   { emoji: '🏖️', prix: 0, label: 'Plage' },
+            'musee':   { emoji: '🏛️', prix: 1000, label: 'Musée' },
+            'matsuri': { emoji: '🏮', prix: 1500, label: 'Festival (Budget Nourriture)' },
+            'parcatt': { emoji: '🎢', prix: 5000, label: 'Parc d\'Attractions' },
+            'marche':  { emoji: '🐟', prix: 2000, label: 'Marché (Budget Nourriture)' },
+            'resto':   { emoji: '🍜', prix: 1500, label: 'Restaurant' },
+            'hotel':   { emoji: '🏨', prix: 8000, label: 'Nuit d\'Hôtel' }
+        };
+
+        let baseDeDonneesJapon = [];
+
+        function genererLieuxMassifs() {
+            const villes = [
+                { lat: 35.6895, lng: 139.6917, rayon: 0.6, nb: 6000 },
+                { lat: 34.6937, lng: 135.5023, rayon: 0.5, nb: 4000 },
+                { lat: 33.5902, lng: 130.4017, rayon: 0.4, nb: 2000 },
+                { lat: 43.0618, lng: 141.3545, rayon: 0.5, nb: 1500 },
+                { lat: 35.1815, lng: 136.9066, rayon: 0.4, nb: 1000 },
+                { lat: 26.2124, lng: 127.6809, rayon: 0.2, nb: 500 }
+            ];
+            const types = Object.keys(configLieux);
+
+            villes.forEach(ville => {
+                for (let i = 0; i < ville.nb; i++) {
+                    let r = ville.rayon * Math.sqrt(Math.random());
+                    let theta = Math.random() * 2 * Math.PI;
+                    let pType = types[Math.floor(Math.random() * types.length)];
+                    baseDeDonneesJapon.push({ nom: "Lieu Japonais (" + configLieux[pType].label + ")", lat: ville.lat + r * Math.cos(theta), lng: ville.lng + r * Math.sin(theta), type: pType });
+                }
+            });
+        }
+
+        function afficherCarteBudget() {
+            genererLieuxMassifs();
+            let marqueursTemp = [];
+
+            baseDeDonneesJapon.forEach(lieu => {
+                let conf = configLieux[lieu.type] || { emoji: '📍', prix: 0, label: 'Lieu inconnu' };
+                let iconeEmoji = L.divIcon({ className: 'emoji-marker', html: conf.emoji, iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -15] });
+                let marker = L.marker([lieu.lat, lieu.lng], { icon: iconeEmoji });
+
+                marker.on('click', function() {
+                    let nomSecurise = lieu.nom.replace(/'/g, "\\'"); 
+                    let htmlBulle = `
+                        <div class="popup-body">
+                            <h3 class="popup-title">${conf.emoji} ${lieu.nom}</h3>
+                            <p class="popup-price">Estimation : <b>${conf.prix} ¥</b></p>
+                            <button class="popup-btn" onclick="ajouterDepenseRapide('${nomSecurise}', ${conf.prix}); map.closePopup();">
+                                ➕ Ajouter à mon budget
+                            </button>
+                        </div>`;
+                    L.popup({ className: 'custom-popup', maxWidth: 250, autoPanPaddingTopLeft: L.point(10, 80) })
+                     .setLatLng([lieu.lat, lieu.lng]).setContent(htmlBulle).openOn(map);
+                });
+                marqueursTemp.push(marker);
+            });
+            groupeClusters.addLayers(marqueursTemp);
+        }
+
+        // Lancement au démarrage
+        afficherCarteBudget();
+        verifierConnexion();
+
+    </script>
+</body>
+</html>
