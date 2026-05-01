@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan and Friends - Mots Utiles & Vocabulaire</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* ================= BASE ================= */
+        :root {
+            --bg-noir: #121212; --bg-gris-fonce: #1e1e1e;
+            --texte-clair: #f5f5f5; --couleur-sakura: #ffb7c5;
+            --texte-fonce: #121212; --kanpai-rouge: #c62828;
+            --bordure-kanpai: #444;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; background-color: var(--bg-noir); color: var(--texte-clair); }
+        
+        /* ================= HEADER & LOGO ================= */
+        header { background-color: var(--bg-gris-fonce); padding: 20px; text-align: center; border-bottom: 2px solid var(--couleur-sakura); position: relative;}
+        header h1 { margin: 0; font-size: 32px; color: var(--couleur-sakura); }
+        
+        .logo-admin { 
+            position: absolute; top: 20px; left: 20px; 
+            height: 70px; width: 70px; object-fit: cover; 
+            border-radius: 50%; cursor: default; transition: 0.3s; 
+        }
+
+        /* ================= NAV & BURGER ================= */
+        .nav-container { background-color: #000; }
+        .menu-burger { 
+            display: none; background: transparent; color: var(--couleur-sakura); 
+            border: none; padding: 15px; font-size: 18px; cursor: pointer; 
+            width: 100%; text-align: center; font-weight: bold; border-bottom: 1px solid #333; 
+        }
+        .menu-burger:hover { background: #111; }
+        
+        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 15px; }
+        nav a { color: var(--texte-clair); text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
+        nav a:hover, nav a.actif { background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; }
+
+        /* ================= LAYOUT ================= */
+        .layout-guide { display: flex; max-width: 1400px; margin: 30px auto; gap: 30px; padding: 0 20px; align-items: flex-start; }
+        
+        /* ================= SIDEBAR & ACCORDÉON ================= */
+        .sidebar-culture { flex: 0 0 280px; background: var(--bg-gris-fonce); border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); position: sticky; top: 20px; }
+        .menu-category { margin-bottom: 25px; }
+        
+        .menu-category h3 { 
+            color: var(--kanpai-rouge); font-size: 18px; margin-top: 0; margin-bottom: 15px; 
+            border-bottom: 1px solid var(--bordure-kanpai); padding-bottom: 8px; 
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;
+        }
+        .arrow { font-size: 12px; transition: transform 0.3s; color: #888; display: none; }
+        .menu-category h3.active .arrow { transform: rotate(180deg); color: var(--couleur-sakura); }
+
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-list li { margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .menu-list a { color: #ccc; text-decoration: none; font-size: 15px; cursor: pointer; transition: 0.2s; display: block; }
+        .menu-list a:hover, .menu-list a.actif-menu { color: var(--couleur-sakura); padding-left: 5px; font-weight: bold; }
+
+        /* ================= CONTENU & GRILLE ================= */
+        .content-area { flex: 1; }
+        .section-title { text-align: center; color: var(--texte-clair); font-size: 24px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 30px; }
+        .section-title span { color: var(--kanpai-rouge); display: block; width: 50px; height: 4px; background-color: var(--kanpai-rouge); margin: 10px auto 0; }
+
+        .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .lien-carte { text-decoration: none; color: inherit; display: block; height: 100%; cursor: pointer;}
+        .article-card { background-color: var(--bg-gris-fonce); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.3s; display: flex; flex-direction: column; height: 100%; }
+        .article-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.6); border: 1px solid var(--couleur-sakura); }
+        .article-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 3px solid #333; }
+        .article-content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .article-header { border-left: 5px solid var(--kanpai-rouge); padding-left: 15px; margin-bottom: 15px; }
+        .article-title { margin: 0 0 5px 0; color: var(--couleur-sakura); font-size: 20px; }
+        .article-subtitle { margin: 0; font-size: 14px; color: #aaa; font-weight: bold; line-height: 1.4; }
+        .article-desc { font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 20px; flex: 1; }
+
+        /* ================= OVERLAY ARTICLE ================= */
+        #article-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-noir); z-index: 2000; overflow-y: auto; padding-bottom: 50px; }
+        .overlay-header { position: sticky; top: 0; background: rgba(0,0,0,0.9); padding: 15px 20px; z-index: 3000; border-bottom: 2px solid var(--couleur-sakura); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); }
+        .btn-retour { background: transparent; color: white; border: none; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-retour:hover { color: var(--couleur-sakura); }
+        .btn-edit-art { background: var(--kanpai-rouge); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; display: none; transition: 0.3s;}
+        .btn-edit-art:hover { background: var(--couleur-sakura); color: black;}
+
+        .art-banner { width: 100%; height: 450px; overflow: hidden; }
+        .art-banner img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+        
+        .art-container { max-width: 960px; margin: -50px auto 30px auto; padding: 40px; background: #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-radius: 8px; position: relative; z-index: 10; border: 1px solid #333; }
+        .art-main-title { text-align: center; font-size: 42px; margin: 0 0 10px 0; color: #fff; text-transform: uppercase; }
+        .art-subtitle { text-align: center; font-size: 20px; color: #aaa; margin: 0 0 30px 0; }
+        .title-separator { width: 60px; height: 5px; background: var(--kanpai-rouge); margin: 0 auto 30px auto; }
+        
+        .section-heading-inline { color: var(--kanpai-rouge); margin-top: 45px; border-bottom: 1px solid #333; padding-bottom: 8px; font-size: 24px;}
+        .art-content p { line-height: 1.9; font-size: 16.5px; margin-bottom: 20px; color: #ccc; }
+        .article-in-img { width: 100%; border-radius: 8px; margin: 25px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 8px; overflow: hidden; margin: 25px 0; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); grid-auto-rows: 200px; grid-auto-flow: dense; gap: 10px; margin-top: 20px; }
+        .gallery-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .gallery-img:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 2; }
+        .gallery-img.md { grid-row: span 2; }
+        .gallery-img.lg { grid-column: span 2; grid-row: span 2; }
+
+        .kanpai-section-title { text-align: center; margin-top: 60px; margin-bottom: 30px;}
+        .kanpai-section-title .icon { font-size: 40px; margin-bottom: -10px; display: block; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));}
+        .kanpai-section-title h2 { color: #fff; text-transform: uppercase; font-size: 24px; margin-bottom: 10px; letter-spacing: 1px;}
+        .kanpai-section-title .sep { width: 40px; height: 6px; background-color: var(--kanpai-rouge); margin: 0 auto; }
+        
+        .pratique-section { display: flex; gap: 40px; margin-top: 30px; }
+        .pratique-col { flex: 1; }
+        .pratique-item { margin-bottom: 25px; }
+        .pratique-item h4 { color: var(--couleur-sakura); font-size: 18px; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 8px;}
+        .pratique-item p { color: #bbb; font-size: 15px; margin: 0; line-height: 1.6;}
+        .btn-site { display: inline-block; margin-top: 10px; padding: 8px 15px; background: var(--kanpai-rouge); color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; transition:0.3s;}
+        .btn-site:hover { background: var(--couleur-sakura); color: black;}
+
+        .map-weather-container { display: flex; gap: 20px; background: #222; padding: 20px; border-radius: 8px; border: 1px solid #333;}
+        #map-solo { height: 350px; flex: 1; border-radius: 8px; border: 2px solid #444; z-index: 1;}
+        .weather-box { width: 350px; flex-shrink: 0; background: #111; border-radius: 8px; padding: 15px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; overflow: hidden;}
+        .weather-box > div { width: 100% !important; max-width: 100% !important; }
+
+        .carousel-container { display: flex; gap: 20px; overflow-x: auto; padding: 10px 5px 20px 5px; scroll-snap-type: x mandatory; }
+        .carousel-container::-webkit-scrollbar { height: 8px; }
+        .carousel-container::-webkit-scrollbar-track { background: #222; border-radius: 10px; }
+        .carousel-container::-webkit-scrollbar-thumb { background: var(--kanpai-rouge); border-radius: 10px; }
+        .carousel-card { flex: 0 0 320px; background: #222; border: 1px solid #333; border-radius: 8px; text-decoration: none; color: white; scroll-snap-align: start; transition: 0.3s; display: flex; flex-direction: column; cursor: pointer;}
+        .carousel-card:hover { transform: translateY(-5px); border-color: var(--couleur-sakura); box-shadow: 0 10px 20px rgba(0,0,0,0.5);}
+        .card-img-wrapper { position: relative; height: 180px; width: 100%;}
+        .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px 8px 0 0; }
+        .card-distance { position: absolute; top: 10px; left: 10px; background: #333; color: white; padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid #555;}
+        .card-body { padding: 20px; flex-grow: 1;}
+        .card-title { border-left: 4px solid var(--kanpai-rouge); padding-left: 10px; color: var(--kanpai-rouge); font-size: 20px; margin: 0 0 8px 0; line-height: 1.2; text-transform: uppercase; font-weight: 900;}
+        .card-subtitle { font-size: 14px; font-weight: bold; color: #ccc;}
+
+        #lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10001; align-items:center; justify-content:center; user-select: none;}
+        #lightbox-img { max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.8); transition: 0.3s; }
+        .lb-btn { position:absolute; color:white; font-size:60px; cursor:pointer; font-weight:bold; text-shadow: 0 0 10px #000; transition: 0.2s; opacity: 0.7;}
+        .lb-btn:hover { opacity: 1; color: var(--couleur-sakura); }
+        #lb-close { top:20px; right:40px; font-size: 50px; }
+        #lb-prev { left:30px; }
+        #lb-next { right:30px; }
+
+        .btn-create-floating { display: none; position: fixed; bottom: 20px; left: 20px; background: var(--couleur-sakura); color: black; border: none; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6); z-index: 1500; transition: 0.3s; border: 2px solid transparent;}
+        .btn-create-floating:hover { background: #e6c800; transform: scale(1.05); }
+
+        /* ================= RESPONSIVE MOBILE ================= */
+        @media (max-width: 900px) {
+            .logo-admin { height: 50px; width: 50px; top: 10px; left: 10px; position: relative; display: block; margin: 0 auto 10px auto; }
+            header { padding: 10px; }
+            
+            .menu-burger { display: block; }
+            nav { display: none; flex-direction: column; padding: 0; width: 100%; }
+            nav.show-nav { display: flex; }
+            nav a { border-radius: 0; border-bottom: 1px solid #222; padding: 15px; width: 100%; box-sizing: border-box; text-align: center; font-size: 16px;}
+            
+            .arrow { display: inline-block; }
+            .menu-list { display: none; }
+            .menu-list.open { display: block; margin-bottom: 15px; }
+            
+            .layout-guide { flex-direction: column; margin-top: 15px; }
+            .sidebar-culture { width: 100%; box-sizing: border-box; position: static; flex: none; padding: 15px; }
+            .menu-category { margin-bottom: 10px; }
+            
+            .art-container { padding: 20px; margin-top: 0; border-radius: 0; border: none;} 
+            .art-banner { height: 250px; } 
+            .photo-gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; } 
+            .gallery-img.lg, .gallery-img.md { grid-column: span 1; grid-row: span 1; } 
+            .pratique-section { flex-direction: column; gap: 0; }
+            .map-weather-container { flex-direction: column; } 
+            .weather-box { width: 100%; box-sizing: border-box;}
+            #map-solo { height: 350px !important; min-height: 350px; width: 100%; display: block; flex: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <script src="data.js"></script>
+
+    <header>
+        <img src="japan and friends.png" alt="Logo" class="logo-admin" onclick="loginAdmin()">
+        <h1>Japan and Friends</h1>
+        <p>Mots Utiles & Vocabulaire Japonais</p>
+    </header>
+
+    <div class="nav-container">
+        <button class="menu-burger" onclick="toggleNav()">☰ Menu Principal</button>
+        <nav id="main-nav">
+            <a href="index.html">Carte & Activités</a>
+            <a href="vocabulaire.html" class="actif">Mots Utiles</a>
+            <a href="convertisseur.html">Convertisseur Yen/Euro</a>
+            <a href="infos.html">Bons Plans & Transports</a>
+            <a href="budget.html">Mon Solde</a>
+            <a href="roadtrip.html">Itinéraire 90 Jours</a>
+            <a href="guide.html">Guide Culturel</a>
+        </nav>
+    </div>
+
+    <button class="btn-create-floating" id="btn-create-new" onclick="window.location.href='admin_guide.html'">➕ Créer une leçon</button>
+
+    <div class="layout-guide">
+        <aside class="sidebar-culture">
+            <div class="menu-category">
+                <h3>Langue japonaise</h3>
+                <ul class="menu-list">
+                    <li><a id="btn-traductions" onclick="chargerArticles('traductions')">Traductions</a></li>
+                    <li><a id="btn-etudier" onclick="chargerArticles('etudier')">Étudier au Japon</a></li>
+                    <li><a id="btn-kana" onclick="chargerArticles('kana')">Kana & Kanji</a></li>
+                    <li><a id="btn-jlpt" onclick="chargerArticles('jlpt')">JLPT</a></li>
+                    <li><a id="btn-insultes" onclick="chargerArticles('insultes')">Insultes</a></li>
+                </ul>
+            </div>
+            
+            <div class="menu-category">
+                <h3>Cours de japonais</h3>
+                <ul class="menu-list">
+                    <li><a id="btn-suffixes" onclick="chargerArticles('suffixes')">Les suffixes (san, kun...)</a></li>
+                    <li><a id="btn-presenter" onclick="chargerArticles('presenter')">Se présenter</a></li>
+                    <li><a id="btn-bonjour" onclick="chargerArticles('bonjour')">Bonjour et au revoir</a></li>
+                    <li><a id="btn-ouinon" onclick="chargerArticles('ouinon')">Oui et non</a></li>
+                    <li><a id="btn-remercier" onclick="chargerArticles('remercier')">Remercier / S'excuser</a></li>
+                    <li><a id="btn-compter" onclick="chargerArticles('compter')">Compter / Donner son âge</a></li>
+                    <li><a id="btn-date" onclick="chargerArticles('date')">La date / L'heure</a></li>
+                    <li><a id="btn-jetaime" onclick="chargerArticles('jetaime')">Je t'aime</a></li>
+                    <li><a id="btn-anniv" onclick="chargerArticles('anniv')">Joyeux anniversaire</a></li>
+                    <li><a id="btn-appetit" onclick="chargerArticles('appetit')">Bon appétit</a></li>
+                    <li><a id="btn-prenom" onclick="chargerArticles('prenom')">Écrire son prénom</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="content-area">
+            <h2 class="section-title" id="titre-section">SÉLECTIONNEZ UNE LEÇON <span></span></h2>
+            <div class="articles-grid" id="grille-articles"></div>
+        </main>
+    </div>
+
+    <!-- Overlay Article -->
+    <div id="article-overlay">
+        <div class="overlay-header">
+            <button class="btn-retour" onclick="closeArticle()">⬅ Retour au vocabulaire</button>
+            <button class="btn-edit-art" id="btn-edit-art">✏️ Modifier</button>
+        </div>
+        <div class="art-banner"><img id="art-banner-img"></div>
+        <main class="art-container">
+            <h1 class="art-main-title" id="art-title"></h1>
+            <h2 class="art-subtitle" id="art-subtitle"></h2>
+            <div class="title-separator"></div>
+
+            <div class="art-content" id="art-content"></div>
+            <div id="art-gallery"></div>
+            <div id="art-prepare"></div>
+            <div id="art-info"></div>
+            <div id="art-surplace"></div>
+            <div id="art-carousel"></div>
+        </main>
+    </div>
+
+    <!-- Lightbox pour la galerie -->
+    <div id="lightbox">
+        <span class="lb-btn" id="lb-close" onclick="fermerLightbox()">&times;</span>
+        <span class="lb-btn" id="lb-prev" onclick="changeImg(-1)">&#10094;</span>
+        <span class="lb-btn" id="lb-next" onclick="changeImg(1)">&#10095;</span>
+        <img id="lightbox-img">
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ================= JAVASCRIPT: BURGER & ACCORDÉON =================
+        function toggleNav() {
+            document.getElementById('main-nav').classList.toggle('show-nav');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const categories = document.querySelectorAll('.menu-category h3');
+            categories.forEach(h3 => {
+                h3.innerHTML += '<span class="arrow">▼</span>';
+                h3.addEventListener('click', () => {
+                    if (window.innerWidth <= 900) {
+                        h3.classList.toggle('active');
+                        const ul = h3.nextElementSibling;
+                        if (ul) ul.classList.toggle('open');
+                    }
+                });
+            });
+            // Chargement de la première catégorie par défaut
+            chargerArticles('traductions'); 
+        });
+
+        // ================= GESTION ADMIN =================
+        function loginAdmin() {
+            if (localStorage.getItem('auth-token')) {
+                if(confirm("Désactiver le mode Administrateur ?")) {
+                    localStorage.removeItem('auth-token'); location.reload();
+                }
+            } else {
+                let pwd = prompt("Veuillez entrer le mot de passe Administrateur :");
+                if (pwd === "admin") { 
+                    localStorage.setItem('auth-token', 'connecte');
+                    alert("✅ Mode Administrateur activé !"); location.reload();
+                } else if (pwd !== null) { alert("❌ Mot de passe incorrect !"); }
+            }
+        }
+
+        if (localStorage.getItem('auth-token')) {
+            document.getElementById('btn-create-new').style.display = 'block';
+            document.querySelector('.logo-admin').style.filter = 'drop-shadow(0px 0px 8px #ffb7c5)';
+        }
+
+        // ================= CHARGEMENT DES ARTICLES =================
+        function chargerArticles(categorieRecherchee) {
+            document.querySelectorAll('.menu-list a').forEach(a => a.classList.remove('actif-menu'));
+            const btn = document.getElementById('btn-' + categorieRecherchee);
+            if(btn) btn.classList.add('actif-menu');
+            
+            const grille = document.getElementById('grille-articles'); 
+            grille.innerHTML = ''; 
+            
+            // Dictionnaire des titres pour chaque sous-catégorie
+            const nomsCategories = {
+                'traductions': 'TRADUCTIONS', 'etudier': 'ÉTUDIER AU JAPON', 'kana': 'KANA & KANJI',
+                'jlpt': 'JLPT', 'insultes': 'INSULTES',
+                'suffixes': 'LES SUFFIXES', 'presenter': 'SE PRÉSENTER', 'bonjour': 'BONJOUR ET AU REVOIR',
+                'ouinon': 'OUI ET NON', 'remercier': 'REMERCIER ET S\'EXCUSER', 'compter': 'COMPTER ET ÂGE',
+                'date': 'LA DATE ET L\'HEURE', 'jetaime': 'JE T\'AIME', 'anniv': 'JOYEUX ANNIVERSAIRE',
+                'appetit': 'BON APPÉTIT', 'prenom': 'ÉCRIRE SON PRÉNOM'
+            };
+            
+            document.getElementById('titre-section').innerHTML = `LEÇONS : ${nomsCategories[categorieRecherchee] || categorieRecherchee.toUpperCase()} <span></span>`;
+
+            // Filtrer et afficher les articles liés au vocabulaire
+            let articlesFiltres = baseArticles.filter(art => art.categorie === categorieRecherchee);
+            
+            if(articlesFiltres.length === 0) {
+                grille.innerHTML = "<p style='color:#aaa; text-align:center; width:100%;'>Aucune leçon disponible dans cette catégorie pour le moment.</p>";
+            } else {
+                articlesFiltres.forEach(article => {
+                    let htmlCard = `<div onclick="openArticle('${article.id}')" class="lien-carte"><article class="article-card"><img src="${article.img}" alt="${article.titre}" class="article-img"><div class="article-content"><div class="article-header"><h3 class="article-title">${article.titre}</h3><p class="article-subtitle">${article.sousTitre}</p></div><p class="article-desc">${article.desc}</p></div></article></div>`;
+                    grille.innerHTML += htmlCard;
+                });
+            }
+        }
+
+        // ================= OVERLAY ARTICLE =================
+        let mapSolo = null; let imagesGalerie = []; let currentArticleId = null;
+
+        function openArticle(id) {
+            const art = baseArticles.find(a => a.id === id); if(!art) return;
+            currentArticleId = id; document.getElementById('article-overlay').scrollTop = 0;
+            document.getElementById('art-banner-img').src = art.img || ''; document.getElementById('art-title').innerText = art.titre || ''; document.getElementById('art-subtitle').innerText = art.sousTitre || '';
+
+            let contentHtml = "";
+            if (art.blocs && art.blocs.length > 0) {
+                art.blocs.forEach(b => {
+                    if (b.type === 'texte') contentHtml += b.val.split(/\r?\n/).filter(p => p.trim() !== '').map(p => `<p>${p}</p>`).join('\n');
+                    else if (b.type === 'titre') contentHtml += `<h3 class="section-heading-inline">${b.val}</h3>`;
+                    else if (b.type === 'image') contentHtml += `<img src="${b.val}" class="article-in-img">`;
+                    else if (b.type === 'video') { let vId = b.val.split('v=')[1]; if(vId) vId = vId.split('&')[0]; contentHtml += `<div class="video-container"><iframe src="https://www.youtube.com/embed/${vId}" frameborder="0" allowfullscreen></iframe></div>`; }
+                });
+            } else if (art.desc) { contentHtml = `<p>${art.desc}</p>`; } 
+            document.getElementById('art-content').innerHTML = contentHtml;
+
+            let galHtml = ""; imagesGalerie = [];
+            if (art.galerie) {
+                const urls = art.galerie.split(/\r?\n/).filter(u => u.trim() !== '');
+                if(urls.length > 0) {
+                    imagesGalerie = urls; galHtml = `<div class="kanpai-section-title"><span class="icon">📸</span><h2>Galerie Photos</h2><div class="sep"></div></div><div class="photo-gallery">`;
+                    urls.forEach((url, i) => { let sizeClass = Math.random() > 0.8 ? 'lg' : Math.random() > 0.6 ? 'md' : ''; galHtml += `<img src="${url}" class="gallery-img ${sizeClass}" onclick="ouvrirLightbox(${i})">`; });
+                    galHtml += `</div>`;
+                }
+            }
+            document.getElementById('art-gallery').innerHTML = galHtml;
+
+            let prepHtml = "";
+            if (art.p_trans || art.p_net || art.p_ass || art.p_evt) {
+                prepHtml = `<div class="kanpai-section-title"><span class="icon">📋</span><h2>Se Préparer</h2><div class="sep"></div></div><div class="pratique-section">`;
+                prepHtml += `<div class="pratique-col">` + (art.p_trans ? `<div class="pratique-item"><h4>📍 Comment s'y rendre ?</h4><p>${art.p_trans.replace(/\n/g, '<br>')}</p></div>` : '') + `</div>`;
+                prepHtml += `<div class="pratique-col">` + (art.p_net ? `<div class="pratique-item"><h4>📶 Internet</h4><p>${art.p_net.replace(/\n/g, '<br>')}</p></div>` : '') + (art.p_ass ? `<div class="pratique-item"><h4>🧳 Assurance</h4><p>${art.p_ass.replace(/\n/g, '<br>')}</p></div>` : '') + (art.p_evt ? `<div class="pratique-item"><h4>🏮 Évènements</h4><p>${art.p_evt.replace(/\n/g, '<br>')}</p></div>` : '') + `</div></div>`;
+            }
+            document.getElementById('art-prepare').innerHTML = prepHtml;
+
+            let infoHtml = "";
+            if (art.meteo || (art.lat && art.lng)) {
+                infoHtml = `<div class="kanpai-section-title"><h2>Informations</h2><div class="sep"></div></div><div class="map-weather-container">`;
+                if(art.lat && art.lng) infoHtml += `<div id="map-solo"></div>`;
+                if(art.meteo) infoHtml += `<div class="weather-box" id="box-meteo"></div>`; 
+                infoHtml += `</div>`;
+            }
+            document.getElementById('art-info').innerHTML = infoHtml;
+
+            if (art.meteo) {
+                try {
+                    let boiteMeteo = document.getElementById('box-meteo');
+                    if (boiteMeteo) {
+                        let temp = document.createElement('div');
+                        temp.innerHTML = art.meteo;
+                        let oldScript = temp.querySelector('script');
+                        let srcScript = oldScript ? oldScript.src : null;
+                        if (oldScript) oldScript.remove();
+                        boiteMeteo.innerHTML = temp.innerHTML;
+                        if (srcScript) {
+                            let newScript = document.createElement('script');
+                            newScript.src = srcScript;
+                            newScript.async = true;
+                            document.body.appendChild(newScript);
+                        }
+                    }
+                } catch (erreur) { console.error("Erreur widget ignorée :", erreur); }
+            }
+
+            let placeHtml = "";
+            if (art.s_quand || art.s_nom || art.s_horaire || art.s_prix || art.web) {
+                placeHtml = `<div class="kanpai-section-title"><span class="icon">⛩️</span><h2>Sur Place</h2><div class="sep"></div></div><div class="pratique-section">`;
+                placeHtml += `<div class="pratique-col">` + (art.s_quand ? `<div class="pratique-item"><h4>📅 Quand partir ?</h4><p>${art.s_quand.replace(/\n/g, '<br>')}</p></div>` : '') + (art.s_nom ? `<div class="pratique-item"><h4>🗣️ Nom Japonais</h4><p>${art.s_nom.replace(/\n/g, '<br>')}</p></div>` : '') + `</div>`;
+                placeHtml += `<div class="pratique-col">` + (art.s_horaire ? `<div class="pratique-item"><h4>🕒 Horaires</h4><p>${art.s_horaire.replace(/\n/g, '<br>')}</p></div>` : '') + (art.s_prix ? `<div class="pratique-item"><h4>💴 Tarifs</h4><p>${art.s_prix.replace(/\n/g, '<br>')}</p></div>` : '') + (art.web ? `<div class="pratique-item"><h4>🔗 Site Web</h4><a href="${art.web}" target="_blank" class="btn-site">Site Officiel</a></div>` : '') + `</div></div>`;
+            }
+            document.getElementById('art-surplace').innerHTML = placeHtml;
+
+            let autresArticles = baseArticles.filter(a => a.id !== art.id);
+            autresArticles.sort(() => 0.5 - Math.random());
+            let articlesAleatoires = autresArticles.slice(0, 3);
+            let carHtml = "";
+            if (articlesAleatoires.length > 0) {
+                carHtml = `<div class="kanpai-section-title"><span class="icon">🎲</span><h2>À découvrir aussi</h2><div class="sep"></div></div><div class="carousel-container">`;
+                articlesAleatoires.forEach(c => {
+                    carHtml += `
+                    <div onclick="openArticle('${c.id}')" class="carousel-card">
+                        <div class="card-img-wrapper">
+                            <span class="card-distance">✨ Recommandé</span>
+                            <img src="${c.img}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Skyscrapers_of_Shinjuku_2009_January.jpg/300px-Skyscrapers_of_Shinjuku_2009_January.jpg'">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">${c.titre}</h5>
+                            <div class="card-subtitle">${c.sousTitre}</div>
+                        </div>
+                    </div>`;
+                });
+                carHtml += `</div>`;
+            }
+            document.getElementById('art-carousel').innerHTML = carHtml;
+
+            document.getElementById('article-overlay').style.display = 'block'; document.body.style.overflow = 'hidden';
+            if (mapSolo) { mapSolo.remove(); mapSolo = null; }
+            if (art.lat && art.lng) { setTimeout(() => { mapSolo = L.map('map-solo').setView([art.lat, art.lng], 15); L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapSolo); L.marker([art.lat, art.lng]).addTo(mapSolo).bindPopup(`<b>${art.titre}</b>`).openPopup(); mapSolo.invalidateSize(); }, 300); }
+
+            if (localStorage.getItem('auth-token')) {
+                document.getElementById('btn-edit-art').style.display = 'block';
+                document.getElementById('btn-edit-art').onclick = () => { 
+                    localStorage.setItem('projetAEditer', JSON.stringify(art)); 
+                    window.location.href = 'admin_guide.html'; 
+                };
+            }
+        }
+
+        function closeArticle() { document.getElementById('article-overlay').style.display = 'none'; document.body.style.overflow = 'auto'; if(mapSolo) { mapSolo.remove(); mapSolo = null; } }
+
+        let currentIndex = 0;
+        function ouvrirLightbox(index) { if(imagesGalerie.length === 0) return; currentIndex = index; document.getElementById('lightbox-img').src = imagesGalerie[currentIndex]; document.getElementById('lightbox').style.display = 'flex'; }
+        function fermerLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+        function changeImg(dir) { currentIndex += dir; if (currentIndex >= imagesGalerie.length) currentIndex = 0; if (currentIndex < 0) currentIndex = imagesGalerie.length - 1; document.getElementById('lightbox-img').src = imagesGalerie[currentIndex]; }
+        document.getElementById('lightbox').addEventListener('click', function(e) { if (e.target !== document.getElementById('lightbox-img') && e.target.className !== 'lb-btn') fermerLightbox(); });
+        document.addEventListener('keydown', function(e) { if (document.getElementById('lightbox').style.display === 'flex') { if (e.key === "Escape") fermerLightbox(); if (e.key === "ArrowRight") changeImg(1); if (e.key === "ArrowLeft") changeImg(-1); } });
+
+    </script>
+</body>
+</html>
