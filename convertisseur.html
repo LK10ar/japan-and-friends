@@ -19,38 +19,27 @@
         /* ================= HEADER & LOGO ================= */
         header { background-color: var(--bg-gris-fonce); padding: 20px; text-align: center; border-bottom: 2px solid var(--couleur-sakura); position: relative;}
         header h1 { margin: 0; font-size: 32px; color: var(--couleur-sakura); }
-        
-        .logo-static { 
-            position: absolute; top: 20px; left: 20px; 
-            height: 70px; width: 70px; object-fit: cover; 
-            border-radius: 50%; cursor: default;
-        }
+        .logo-static { position: absolute; top: 20px; left: 20px; height: 70px; width: 70px; object-fit: cover; border-radius: 50%; cursor: default; }
 
         /* ================= NAV & BURGER ================= */
         .nav-container { background-color: #000; position: relative; z-index: 1000;}
-        .menu-burger { 
-            display: none; background: transparent; color: var(--couleur-sakura); 
-            border: none; padding: 15px; font-size: 18px; cursor: pointer; 
-            width: 100%; text-align: center; font-weight: bold; border-bottom: 1px solid #333; 
-        }
+        .menu-burger { display: none; background: transparent; color: var(--couleur-sakura); border: none; padding: 15px; font-size: 18px; cursor: pointer; width: 100%; text-align: center; font-weight: bold; border-bottom: 1px solid #333; }
         .menu-burger:hover { background: #111; }
-        
         nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 15px; }
         nav a { color: var(--texte-clair); text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
         nav a:hover, nav a.actif { background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; }
 
-        /* ================= CONVERTISSEUR (STYLE UNIQUE) ================= */
+        /* ================= CONVERTISSEUR ================= */
         .converter-wrapper { display: flex; justify-content: center; align-items: center; padding: 50px 20px; min-height: 60vh;}
         .converter-card { background: var(--bg-gris-fonce); border-radius: 12px; padding: 40px; box-shadow: 0 8px 30px rgba(0,0,0,0.8); border: 2px solid #333; width: 100%; max-width: 500px; text-align: center; position: relative;}
         .converter-card h2 { color: var(--couleur-sakura); margin-top: 0; margin-bottom: 30px; font-size: 28px; text-transform: uppercase; letter-spacing: 1px;}
         
         .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
         .input-group label { font-weight: bold; color: #ccc; font-size: 14px; }
-        .input-row { display: flex; gap: 10px; }
+        .input-row { display: flex; gap: 10px; align-items: stretch;}
         
-        .input-row input { flex: 2; padding: 15px; border-radius: 8px; border: 1px solid var(--bordure-kanpai); background: var(--bg-noir); color: white; font-size: 20px; outline: none; transition: 0.3s; width: 100%; box-sizing: border-box;}
-        .input-row input:focus { border-color: var(--couleur-sakura); box-shadow: 0 0 10px rgba(255,183,197,0.3); }
-        .input-row select { flex: 1; padding: 15px; border-radius: 8px; border: 1px solid var(--bordure-kanpai); background: #222; color: var(--couleur-sakura); font-size: 16px; font-weight: bold; cursor: pointer; outline: none; }
+        .input-row input[type="number"] { flex: 2; padding: 15px; border-radius: 8px; border: 1px solid var(--bordure-kanpai); background: var(--bg-noir); color: white; font-size: 20px; outline: none; transition: 0.3s; width: 100%; box-sizing: border-box;}
+        .input-row input[type="number"]:focus { border-color: var(--couleur-sakura); box-shadow: 0 0 10px rgba(255,183,197,0.3); }
         
         .swap-btn-container { margin: -10px 0 10px 0; }
         .btn-swap { background: var(--kanpai-rouge); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: inline-flex; justify-content: center; align-items: center;}
@@ -59,19 +48,38 @@
         .rate-info { margin-top: 25px; font-size: 13px; color: #888; border-top: 1px solid #333; padding-top: 15px;}
         .loader { display: none; color: var(--couleur-sakura); font-weight: bold; margin-bottom: 15px; }
 
-        /* ================= RESPONSIVE MOBILE ================= */
+        /* ================= CUSTOM SELECT (AVEC RECHERCHE) ================= */
+        .custom-select-wrapper { flex: 1; position: relative; user-select: none; }
+        
+        .select-trigger { background: #222; border: 1px solid var(--bordure-kanpai); border-radius: 8px; padding: 15px; color: var(--couleur-sakura); font-size: 16px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; height: 100%; box-sizing: border-box;}
+        .select-trigger:after { content: "▼"; font-size: 12px; margin-left: 10px;}
+        
+        .select-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #2a2a2a; border: 1px solid var(--couleur-sakura); border-radius: 8px; margin-top: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 100; display: none; flex-direction: column; overflow: hidden;}
+        .select-dropdown.open { display: flex; }
+        
+        .search-box { padding: 10px; border-bottom: 1px solid #444; background: #1a1a1a; }
+        .search-box input { width: 100%; padding: 8px; border: 1px solid #555; border-radius: 4px; background: #111; color: white; box-sizing: border-box; font-size: 14px; outline: none;}
+        .search-box input:focus { border-color: var(--couleur-sakura); }
+
+        .options-list { max-height: 200px; overflow-y: auto; }
+        .options-list::-webkit-scrollbar { width: 6px; }
+        .options-list::-webkit-scrollbar-track { background: #222; }
+        .options-list::-webkit-scrollbar-thumb { background: var(--couleur-sakura); border-radius: 10px; }
+        
+        .option-item { padding: 12px 15px; color: white; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .option-item:hover { background: var(--couleur-sakura); color: black; font-weight: bold; }
+        .option-item.selected { background: var(--kanpai-rouge); color: white; font-weight: bold;}
+
+        /* ================= RESPONSIVE ================= */
         @media (max-width: 900px) {
-            /* Logo & Header */
-            .logo-static { height: 50px; width: 50px; top: 10px; left: 10px; position: relative; display: block; margin: 0 auto 10px auto; }
+            .logo-static { height: 50px; width: 50px; top: 10px; left: 10px; display: block; margin: 0 auto 10px auto; }
             header { padding: 10px; }
-            
-            /* Burger Menu */
             .menu-burger { display: block; }
             nav { display: none; flex-direction: column; padding: 0; width: 100%; }
             nav.show-nav { display: flex; }
             nav a { border-radius: 0; border-bottom: 1px solid #222; padding: 15px; width: 100%; box-sizing: border-box; text-align: center; font-size: 16px;}
-            
             .input-row { flex-direction: column; }
+            .select-trigger { justify-content: center; gap: 10px; }
         }
     </style>
 </head>
@@ -106,17 +114,19 @@
                 <label>Montant à convertir</label>
                 <div class="input-row">
                     <input type="number" id="amountOne" value="1000" min="0">
-                    <select id="currencyOne">
-                        <option value="JPY" selected>🇯🇵 JPY (Yen)</option>
-                        <option value="EUR">🇪🇺 EUR (Euro)</option>
-                        <option value="USD">🇺🇸 USD (Dollar)</option>
-                        <option value="GBP">🇬🇧 GBP (Livre)</option>
-                        <option value="CAD">🇨🇦 CAD (Dollar CA)</option>
-                        <option value="CHF">🇨🇭 CHF (Franc CH)</option>
-                        <option value="AUD">🇦🇺 AUD (Dollar AU)</option>
-                        <option value="KRW">🇰🇷 KRW (Won)</option>
-                        <option value="CNY">🇨🇳 CNY (Yuan)</option>
-                    </select>
+                    
+                    <!-- MENU DÉROULANT CUSTOM 1 -->
+                    <div class="custom-select-wrapper" id="wrapperOne">
+                        <div class="select-trigger" id="triggerOne" onclick="toggleDropdown('dropdownOne')">🇯🇵 JPY (Yen)</div>
+                        <div class="select-dropdown" id="dropdownOne">
+                            <div class="search-box">
+                                <input type="text" placeholder="Rechercher..." id="searchOne" onkeyup="filterOptions('dropdownOne', 'searchOne')" onclick="event.stopPropagation();">
+                            </div>
+                            <div class="options-list" id="listOne">
+                                <!-- Rempli par JavaScript -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -128,103 +138,187 @@
                 <label>Résultat de la conversion</label>
                 <div class="input-row">
                     <input type="number" id="amountTwo" readonly>
-                    <select id="currencyTwo">
-                        <option value="JPY">🇯🇵 JPY (Yen)</option>
-                        <option value="EUR" selected>🇪🇺 EUR (Euro)</option>
-                        <option value="USD">🇺🇸 USD (Dollar)</option>
-                        <option value="GBP">🇬🇧 GBP (Livre)</option>
-                        <option value="CAD">🇨🇦 CAD (Dollar CA)</option>
-                        <option value="CHF">🇨🇭 CHF (Franc CH)</option>
-                        <option value="AUD">🇦🇺 AUD (Dollar AU)</option>
-                        <option value="KRW">🇰🇷 KRW (Won)</option>
-                        <option value="CNY">🇨🇳 CNY (Yuan)</option>
-                    </select>
+                    
+                    <!-- MENU DÉROULANT CUSTOM 2 -->
+                    <div class="custom-select-wrapper" id="wrapperTwo">
+                        <div class="select-trigger" id="triggerTwo" onclick="toggleDropdown('dropdownTwo')">🇪🇺 EUR (Euro)</div>
+                        <div class="select-dropdown" id="dropdownTwo">
+                            <div class="search-box">
+                                <input type="text" placeholder="Rechercher..." id="searchTwo" onkeyup="filterOptions('dropdownTwo', 'searchTwo')" onclick="event.stopPropagation();">
+                            </div>
+                            <div class="options-list" id="listTwo">
+                                <!-- Rempli par JavaScript -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="rate-info" id="rateInfo">
-                Taux de change mis à jour aujourd'hui.
-            </div>
+            <div class="rate-info" id="rateInfo">Taux de change mis à jour aujourd'hui.</div>
         </div>
     </main>
 
     <script>
-        // ================= MENU BURGER =================
-        function toggleNav() {
-            document.getElementById('main-nav').classList.toggle('show-nav');
+        function toggleNav() { document.getElementById('main-nav').classList.toggle('show-nav'); }
+
+        // ================= DONNÉES DES DEVISES =================
+        const currencies = [
+            { code: "JPY", flag: "🇯🇵", name: "JPY (Yen)" },
+            { code: "EUR", flag: "🇪🇺", name: "EUR (Euro)" },
+            { code: "USD", flag: "🇺🇸", name: "USD (Dollar)" },
+            { code: "GBP", flag: "🇬🇧", name: "GBP (Livre)" },
+            { code: "CAD", flag: "🇨🇦", name: "CAD (Dollar CA)" },
+            { code: "CHF", flag: "🇨🇭", name: "CHF (Franc CH)" },
+            { code: "AUD", flag: "🇦🇺", name: "AUD (Dollar AU)" },
+            { code: "KRW", flag: "🇰🇷", name: "KRW (Won)" },
+            { code: "CNY", flag: "🇨🇳", name: "CNY (Yuan)" },
+            { code: "THB", flag: "🇹🇭", name: "THB (Baht)" },
+            { code: "VND", flag: "🇹🇭", name: "VND (Dong)" }, // Drapeau indicatif
+            { code: "SGD", flag: "🇸🇬", name: "SGD (Dollar SG)" },
+            { code: "HKD", flag: "🇸🇬", name: "HKD (Dollar HK)" } // Drapeau indicatif
+        ];
+
+        // État actuel
+        let currentCurOne = "JPY";
+        let currentCurTwo = "EUR";
+        let exchangeRates = {};
+
+        // ================= GESTION DES MENUS DÉROULANTS CUSTOM =================
+        function initDropdowns() {
+            populateList('listOne', 'triggerOne', 'dropdownOne', true);
+            populateList('listTwo', 'triggerTwo', 'dropdownTwo', false);
         }
 
-        // ================= LOGIQUE DU CONVERTISSEUR =================
-        // Éléments du DOM (l'interface)
-        const currencyEl_one = document.getElementById('currencyOne');
+        function populateList(listId, triggerId, dropdownId, isFirst) {
+            const listEl = document.getElementById(listId);
+            listEl.innerHTML = "";
+            
+            let selectedCode = isFirst ? currentCurOne : currentCurTwo;
+
+            currencies.forEach(cur => {
+                let isSelected = cur.code === selectedCode;
+                let div = document.createElement("div");
+                div.className = "option-item" + (isSelected ? " selected" : "");
+                div.innerHTML = `${cur.flag} ${cur.name}`;
+                
+                div.onclick = function(e) {
+                    e.stopPropagation(); // Évite de rouvrir le menu direct
+                    // Mettre à jour la variable globale
+                    if(isFirst) currentCurOne = cur.code;
+                    else currentCurTwo = cur.code;
+                    
+                    // Mettre à jour l'affichage du bouton
+                    document.getElementById(triggerId).innerHTML = `${cur.flag} ${cur.name}`;
+                    
+                    // Rafraîchir les deux listes pour remettre le style "selected" au bon endroit
+                    initDropdowns(); 
+                    
+                    // Fermer le menu
+                    document.getElementById(dropdownId).classList.remove('open');
+                    
+                    // Relancer le calcul !
+                    calculate();
+                };
+                listEl.appendChild(div);
+            });
+        }
+
+        function toggleDropdown(dropdownId) {
+            // Fermer l'autre dropdown si on clique sur un
+            if(dropdownId === 'dropdownOne') document.getElementById('dropdownTwo').classList.remove('open');
+            else document.getElementById('dropdownOne').classList.remove('open');
+
+            const dp = document.getElementById(dropdownId);
+            dp.classList.toggle('open');
+            
+            // Focus la barre de recherche automatiquement
+            if(dp.classList.contains('open')){
+                let searchInput = dp.querySelector('.search-box input');
+                searchInput.value = ""; // Vider l'ancienne recherche
+                searchInput.focus();
+                filterOptions(dropdownId, searchInput.id); // Remettre toutes les options
+            }
+        }
+
+        function filterOptions(dropdownId, searchId) {
+            let input = document.getElementById(searchId).value.toUpperCase();
+            let options = document.getElementById(dropdownId).querySelectorAll('.option-item');
+            
+            options.forEach(opt => {
+                let text = opt.innerText || opt.textContent;
+                if (text.toUpperCase().indexOf(input) > -1) {
+                    opt.style.display = "";
+                } else {
+                    opt.style.display = "none";
+                }
+            });
+        }
+
+        // Fermer les dropdowns si on clique ailleurs sur la page
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('wrapperOne').contains(e.target)) {
+                document.getElementById('dropdownOne').classList.remove('open');
+            }
+            if (!document.getElementById('wrapperTwo').contains(e.target)) {
+                document.getElementById('dropdownTwo').classList.remove('open');
+            }
+        });
+
+
+        // ================= LOGIQUE DU CALCULATEUR =================
         const amountEl_one = document.getElementById('amountOne');
-        const currencyEl_two = document.getElementById('currencyTwo');
         const amountEl_two = document.getElementById('amountTwo');
         const rateInfo = document.getElementById('rateInfo');
         const loader = document.getElementById('loader');
 
-        // Objet qui va stocker nos taux de change en mémoire
-        let exchangeRates = {};
-
-        // 1. Fonction pour récupérer les taux depuis l'API publique
         async function fetchRates() {
-            loader.style.display = 'block'; // Affiche le texte de chargement
+            loader.style.display = 'block';
             try {
-                // On interroge l'API avec le Yen (JPY) comme base de calcul
                 const res = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
                 const data = await res.json();
-                
-                // On sauvegarde les taux dans notre variable
                 exchangeRates = data.rates;
-                
-                // On lance le premier calcul
                 calculate();
             } catch (error) {
                 rateInfo.innerText = "❌ Erreur de connexion : Impossible de récupérer les taux en direct.";
             } finally {
-                loader.style.display = 'none'; // Cache le texte de chargement
+                loader.style.display = 'none';
             }
         }
 
-        // 2. Fonction pour effectuer le calcul mathématique
         function calculate() {
-            // Si les taux ne sont pas encore chargés, on arrête la fonction
             if (Object.keys(exchangeRates).length === 0) return;
 
-            // On récupère les devises sélectionnées
-            const currencyOne = currencyEl_one.value;
-            const currencyTwo = currencyEl_two.value;
-            const amountOne = amountEl_one.value;
-
-            // Mathématiques : On ramène tout à la base JPY pour croiser les taux
-            const rateOne = exchangeRates[currencyOne];
-            const rateTwo = exchangeRates[currencyTwo];
-            
-            // Calcul croisé (ex: JPY -> USD -> EUR)
+            const rateOne = exchangeRates[currentCurOne];
+            const rateTwo = exchangeRates[currentCurTwo];
             const finalRate = rateTwo / rateOne;
 
-            // On affiche le résultat arrondi à 2 chiffres après la virgule
-            amountEl_two.value = (amountOne * finalRate).toFixed(2);
-
-            // On affiche un petit texte informatif en bas
-            rateInfo.innerText = `1 ${currencyOne} = ${finalRate.toFixed(4)} ${currencyTwo} (Taux du jour)`;
+            amountEl_two.value = (amountEl_one.value * finalRate).toFixed(2);
+            rateInfo.innerText = `1 ${currentCurOne} = ${finalRate.toFixed(4)} ${currentCurTwo} (Taux du jour)`;
         }
 
-        // 3. Fonction pour inverser les deux devises
         function swapCurrencies() {
-            const temp = currencyEl_one.value;
-            currencyEl_one.value = currencyEl_two.value;
-            currencyEl_two.value = temp;
+            let tempCode = currentCurOne;
+            currentCurOne = currentCurTwo;
+            currentCurTwo = tempCode;
+            
+            // Mise à jour visuelle des boutons
+            let cur1Obj = currencies.find(c => c.code === currentCurOne);
+            let cur2Obj = currencies.find(c => c.code === currentCurTwo);
+            
+            document.getElementById('triggerOne').innerHTML = `${cur1Obj.flag} ${cur1Obj.name}`;
+            document.getElementById('triggerTwo').innerHTML = `${cur2Obj.flag} ${cur2Obj.name}`;
+            
+            initDropdowns(); // Remettre à jour la sélection interne
             calculate();
         }
 
-        // 4. On écoute les changements de l'utilisateur pour recalculer en temps réel
-        currencyEl_one.addEventListener('change', calculate);
         amountEl_one.addEventListener('input', calculate);
-        currencyEl_two.addEventListener('change', calculate);
 
-        // 5. Au chargement de la page, on lance la récupération des données
-        window.addEventListener('DOMContentLoaded', fetchRates);
+        // Au chargement
+        window.addEventListener('DOMContentLoaded', () => {
+            initDropdowns();
+            fetchRates();
+        });
     </script>
 </body>
 </html>
