@@ -68,6 +68,10 @@
         .input-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #555; background: var(--bg-noir); color: white; box-sizing: border-box; font-size: 16px; outline: none; }
         .input-group input:focus { border-color: var(--couleur-sakura); }
         
+        /* Style du menu déroulant devise */
+        select.currency-select { padding: 12px; border-radius: 8px; border: 1px solid #555; background: var(--bg-noir); color: white; font-size: 16px; outline: none; cursor: pointer; }
+        select.currency-select:focus { border-color: var(--couleur-sakura); }
+
         .btn-action { width: 100%; padding: 12px; background: var(--couleur-sakura); color: var(--texte-fonce); border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
         .btn-action:hover { background: white; box-shadow: 0 0 15px rgba(255,183,197,0.5); }
 
@@ -125,7 +129,8 @@
     </div>
 
     <header>
-        <img src="japan and friends.png" alt="Logo" class="logo-static">
+        <!-- N'oublie pas de remettre le logo -->
+        <img src="LIEN_VERS_TON_LOGO.png" alt="Logo" class="logo-static">
         <div class="user-controls" id="userControls" style="display: none;">
             <span class="user-greeting" id="displayUsername"></span>
             <button class="btn-logout" onclick="seDeconnecter()">Déconnexion</button>
@@ -167,13 +172,25 @@
 
         <div class="app-layout">
             <div class="left-panel">
+                
+                <!-- BOÎTE DE BUDGET MODIFIÉE AVEC DÉROULANT DE DEVISE -->
                 <div class="form-box">
                     <h3>💰 Définir mon budget</h3>
                     <div class="input-group">
-                        <label>Montant total (en Yen)</label>
-                        <input type="number" id="input-budget-total" placeholder="Ex: 200000">
+                        <label>Montant total</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="input-budget-total" placeholder="Ex: 2000" style="flex: 2;">
+                            <select id="select-budget-currency" class="currency-select" style="flex: 1;">
+                                <option value="JPY">🇯🇵 JPY (Yen)</option>
+                                <option value="EUR" selected>🇪🇺 EUR (Euro)</option>
+                                <option value="USD">🇺🇸 USD (Dollar)</option>
+                                <option value="CAD">🇨🇦 CAD (Dollar CA)</option>
+                                <option value="CHF">🇨🇭 CHF (Franc CH)</option>
+                            </select>
+                        </div>
                     </div>
-                    <button class="btn-action" onclick="definirBudget()">Mettre à jour</button>
+                    <p id="budget-conversion-info" style="font-size: 13px; color: var(--couleur-sakura); margin-top: -5px; margin-bottom: 10px; display: none;"></p>
+                    <button class="btn-action" id="btn-define-budget" onclick="definirBudget()">Mettre à jour</button>
                 </div>
 
                 <div class="form-box">
@@ -196,7 +213,7 @@
             </div>
 
             <div class="right-panel">
-                <p style="margin-top: 0; color: #ccc;">💡 <em>Clique sur un point de la carte pour l'ajouter automatiquement à ton budget avec une estimation de prix.</em></p>
+                <p style="margin-top: 0; color: #ccc;">💡 <em>Clique sur un point de la carte pour l'ajouter automatiquement à ton budget avec une estimation de prix en Yen.</em></p>
                 <div id="map-budget"></div>
             </div>
         </div>
@@ -226,7 +243,6 @@
                 document.getElementById('displayUsername').innerText = currentUser;
                 await chargerBudgetServeur(); // On charge les données depuis le serveur
             } else {
-                // Mode hors ligne / non connecté, on charge le local par défaut
                 mettreAJourUI();
             }
         }
@@ -269,7 +285,6 @@
             localStorage.removeItem('roadtripUser');
             localStorage.removeItem('auth-token');
             currentUser = null; authToken = null; 
-            // On remet à zéro la vue
             budgetTotal = 0; listeDepenses = [];
             mettreAJourUI(); 
             document.getElementById('login-overlay').style.display = 'flex';
@@ -277,21 +292,18 @@
             document.getElementById('passwordInput').value = '';
         }
 
-        // ================= LOGIQUE DU BUDGET =================
+        // ================= LOGIQUE DU BUDGET & CONVERSION EN DIRECT =================
         let budgetTotal = localStorage.getItem('monBudgetTotal') ? parseFloat(localStorage.getItem('monBudgetTotal')) : 0;
         let listeDepenses = localStorage.getItem('mesDepenses') ? JSON.parse(localStorage.getItem('mesDepenses')) : [];
 
-        // Fonction pour récupérer les données du serveur
         async function chargerBudgetServeur() {
             if(!authToken) return;
             try {
                 const res = await fetch(`${URL_API}/budget`, { headers: { 'auth-token': authToken } });
                 if(res.ok) {
                     const data = await res.json();
-                    // On met à jour nos variables avec les données du serveur
                     if(data.budgetTotal !== undefined) budgetTotal = data.budgetTotal;
                     if(data.depenses && Array.isArray(data.depenses)) listeDepenses = data.depenses;
-                    // Sauvegarde locale de secours
                     localStorage.setItem('monBudgetTotal', budgetTotal);
                     localStorage.setItem('mesDepenses', JSON.stringify(listeDepenses));
                 }
@@ -299,13 +311,11 @@
             mettreAJourUI();
         }
 
-        // Fonction pour envoyer les données au serveur
         async function sauvegarderBudgetServeur() {
-            // Sauvegarde locale quoi qu'il arrive
             localStorage.setItem('monBudgetTotal', budgetTotal);
             localStorage.setItem('mesDepenses', JSON.stringify(listeDepenses));
 
-            if(!authToken) return; // Si pas connecté, on s'arrête là
+            if(!authToken) return;
 
             document.getElementById('sync-status').innerText = "⏳ Synchronisation...";
             try {
@@ -352,13 +362,43 @@
             }
         }
 
-        function definirBudget() {
+        // --- NOUVELLE FONCTION AVEC CONVERTISSEUR API ---
+        async function definirBudget() {
             const inputMontant = document.getElementById('input-budget-total').value;
+            const currency = document.getElementById('select-budget-currency').value;
+            const btn = document.getElementById('btn-define-budget');
+            const infoText = document.getElementById('budget-conversion-info');
+
             if (inputMontant !== "") {
-                budgetTotal = parseFloat(inputMontant);
+                let montant = parseFloat(inputMontant);
+
+                // Si la devise n'est pas le Yen, on va chercher le taux en direct !
+                if (currency !== 'JPY') {
+                    btn.innerText = "⏳ Conversion en cours...";
+                    try {
+                        const res = await fetch('https://api.exchangerate-api.com/v4/latest/' + currency);
+                        const data = await res.json();
+                        const rate = data.rates['JPY'];
+                        
+                        budgetTotal = Math.round(montant * rate); // On arrondit le Yen converti
+                        
+                        infoText.innerHTML = `💡 Converti : <b>${montant} ${currency}</b> ≈ <b>${budgetTotal.toLocaleString()} ¥</b>`;
+                        infoText.style.display = 'block';
+                    } catch (error) {
+                        alert("❌ Erreur de connexion pour la conversion en direct. Veuillez entrer la valeur directement en Yen (JPY).");
+                        btn.innerText = "Mettre à jour";
+                        return; // On stoppe l'action si on n'a pas internet
+                    }
+                    btn.innerText = "Mettre à jour";
+                } else {
+                    // Si c'est déjà du Yen, on l'applique directement
+                    budgetTotal = montant;
+                    infoText.style.display = 'none';
+                }
+
                 document.getElementById('input-budget-total').value = ""; 
                 mettreAJourUI(); 
-                sauvegarderBudgetServeur(); // On déclenche la sauvegarde sur le serveur
+                sauvegarderBudgetServeur(); // Sauvegarde sur le serveur
             }
         }
 
@@ -370,20 +410,20 @@
                 document.getElementById('input-nom-depense').value = "";
                 document.getElementById('input-cout-depense').value = "";
                 mettreAJourUI();
-                sauvegarderBudgetServeur(); // On déclenche la sauvegarde
+                sauvegarderBudgetServeur(); 
             }
         }
 
         window.ajouterDepenseRapide = function(nomPredefini, coutPredefini) {
             listeDepenses.push({ nom: nomPredefini, cout: parseFloat(coutPredefini) });
             mettreAJourUI();
-            sauvegarderBudgetServeur(); // On déclenche la sauvegarde
+            sauvegarderBudgetServeur(); 
         };
 
         function supprimerDepense(index) {
             listeDepenses.splice(index, 1);
             mettreAJourUI(); 
-            sauvegarderBudgetServeur(); // On déclenche la sauvegarde
+            sauvegarderBudgetServeur(); 
         }
 
         // ================= CARTE INTERACTIVE =================
