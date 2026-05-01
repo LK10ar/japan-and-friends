@@ -333,7 +333,7 @@
             const btn = document.getElementById('btn-' + categorieRecherchee);
             if(btn) btn.classList.add('actif-menu');
             const grille = document.getElementById('grille-articles'); grille.innerHTML = ''; 
-            const nomsCategories = { 'anime': 'ANIMÉS ET MANGAS', 'histoire': 'L\'HISTOIRE DU JAPON', 'contes': 'CONTES ET LÉGENDES', 'films': 'FILMS ET CINÉMA', 'arts': 'ARTS JAPONAIS', 'tatouages': 'TATOUAGES ET ONSENS', 'musique': 'MUSIQUE ET FESTIVALS', 'litterature': 'LITTÉRATURE JAPONAISE', 'religion': 'RELIGION ET SPIRITUALITÉ', 'insolite': 'LE JAPON INSOLITE', 'kawaii': 'CULTURE KAWAII', 'animaux': 'LES ANIMAUX AU JAPON' };
+         const nomsCategories = { 'anime': 'ANIMÉS ET MANGAS', 'histoire': 'L\'HISTOIRE DU JAPON', 'contes': 'CONTES ET LÉGENDES', 'films': 'FILMS ET CINÉMA', 'arts': 'ARTS JAPONAIS', 'tatouages': 'TATOUAGES ET ONSENS', 'musique': 'MUSIQUE ET FESTIVALS', 'litterature': 'LITTÉRATURE JAPONAISE', 'religion': 'RELIGION ET SPIRITUALITÉ', 'insolite': 'LE JAPON INSOLITE', 'kawaii': 'CULTURE KAWAII', 'animaux': 'LES ANIMAUX AU JAPON', 'visas': 'VISAS ET DÉMARCHES', 'sortir': 'SORTIR LE SOIR', 'travailler': 'TRAVAILLER AU JAPON', 'femmes': 'LES FEMMES AU JAPON', 'mode': 'MODE JAPONAISE', 'sante': 'SANTÉ AU JAPON' };
             document.getElementById('titre-section').innerHTML = `DESTINATIONS POUR ${nomsCategories[categorieRecherchee] || categorieRecherchee.toUpperCase()} <span></span>`;
 
             let articlesFiltres = baseArticles.filter(art => art.categorie === categorieRecherchee);
