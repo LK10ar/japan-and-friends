@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan and Friends - Convertisseur de Devises</title>
+    
+    <style>
+        /* ================= BASE ================= */
+        :root {
+            --bg-noir: #121212; --bg-gris-fonce: #1e1e1e;
+            --texte-clair: #f5f5f5; --couleur-sakura: #ffb7c5;
+            --texte-fonce: #121212; --kanpai-rouge: #c62828;
+            --bordure-kanpai: #444;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; background-color: var(--bg-noir); color: var(--texte-clair); overflow-x: hidden; }
+        
+        /* ================= HEADER & LOGO ================= */
+        header { background-color: var(--bg-gris-fonce); padding: 20px; text-align: center; border-bottom: 2px solid var(--couleur-sakura); position: relative;}
+        header h1 { margin: 0; font-size: 32px; color: var(--couleur-sakura); }
+        
+        .logo-static { 
+            position: absolute; top: 20px; left: 20px; 
+            height: 70px; width: 70px; object-fit: cover; 
+            border-radius: 50%; cursor: default;
+        }
+
+        /* ================= NAV & BURGER ================= */
+        .nav-container { background-color: #000; position: relative; z-index: 1000;}
+        .menu-burger { 
+            display: none; background: transparent; color: var(--couleur-sakura); 
+            border: none; padding: 15px; font-size: 18px; cursor: pointer; 
+            width: 100%; text-align: center; font-weight: bold; border-bottom: 1px solid #333; 
+        }
+        .menu-burger:hover { background: #111; }
+        
+        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 15px; }
+        nav a { color: var(--texte-clair); text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
+        nav a:hover, nav a.actif { background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; }
+
+        /* ================= CONVERTISSEUR (STYLE UNIQUE) ================= */
+        .converter-wrapper { display: flex; justify-content: center; align-items: center; padding: 50px 20px; min-height: 60vh;}
+        .converter-card { background: var(--bg-gris-fonce); border-radius: 12px; padding: 40px; box-shadow: 0 8px 30px rgba(0,0,0,0.8); border: 2px solid #333; width: 100%; max-width: 500px; text-align: center; position: relative;}
+        .converter-card h2 { color: var(--couleur-sakura); margin-top: 0; margin-bottom: 30px; font-size: 28px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
+        .input-group label { font-weight: bold; color: #ccc; font-size: 14px; }
+        .input-row { display: flex; gap: 10px; }
+        
+        .input-row input { flex: 2; padding: 15px; border-radius: 8px; border: 1px solid var(--bordure-kanpai); background: var(--bg-noir); color: white; font-size: 20px; outline: none; transition: 0.3s; width: 100%; box-sizing: border-box;}
+        .input-row input:focus { border-color: var(--couleur-sakura); box-shadow: 0 0 10px rgba(255,183,197,0.3); }
+        .input-row select { flex: 1; padding: 15px; border-radius: 8px; border: 1px solid var(--bordure-kanpai); background: #222; color: var(--couleur-sakura); font-size: 16px; font-weight: bold; cursor: pointer; outline: none; }
+        
+        .swap-btn-container { margin: -10px 0 10px 0; }
+        .btn-swap { background: var(--kanpai-rouge); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: inline-flex; justify-content: center; align-items: center;}
+        .btn-swap:hover { background: var(--couleur-sakura); color: black; transform: rotate(180deg); }
+
+        .rate-info { margin-top: 25px; font-size: 13px; color: #888; border-top: 1px solid #333; padding-top: 15px;}
+        .loader { display: none; color: var(--couleur-sakura); font-weight: bold; margin-bottom: 15px; }
+
+        /* ================= RESPONSIVE MOBILE ================= */
+        @media (max-width: 900px) {
+            /* Logo & Header */
+            .logo-static { height: 50px; width: 50px; top: 10px; left: 10px; position: relative; display: block; margin: 0 auto 10px auto; }
+            header { padding: 10px; }
+            
+            /* Burger Menu */
+            .menu-burger { display: block; }
+            nav { display: none; flex-direction: column; padding: 0; width: 100%; }
+            nav.show-nav { display: flex; }
+            nav a { border-radius: 0; border-bottom: 1px solid #222; padding: 15px; width: 100%; box-sizing: border-box; text-align: center; font-size: 16px;}
+            
+            .input-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <img src="japan and friends.png" alt="Logo" class="logo-static">
+        <h1>Japan and Friends</h1>
+        <p>Le Grand Guide Culturel du Japon</p>
+    </header>
+
+    <div class="nav-container">
+        <button class="menu-burger" onclick="toggleNav()">☰ Menu Principal</button>
+        <nav id="main-nav">
+            <a href="index.html">Carte & Activités</a>
+            <a href="vocabulaire.html">Mots Utiles</a>
+            <a href="convertisseur.html" class="actif">Convertisseur Yen/Euro</a>
+            <a href="infos.html">Bons Plans & Transports</a>
+            <a href="budget.html">Mon Solde</a>
+            <a href="roadtrip.html">Itinéraire 90 Jours</a>
+            <a href="guide.html">Guide Culturel</a>
+        </nav>
+    </div>
+
+    <main class="converter-wrapper">
+        <div class="converter-card">
+            <h2>💴 Convertisseur</h2>
+            
+            <div id="loader" class="loader">⏳ Récupération des taux en direct...</div>
+
+            <div class="input-group">
+                <label>Montant à convertir</label>
+                <div class="input-row">
+                    <input type="number" id="amountOne" value="1000" min="0">
+                    <select id="currencyOne">
+                        <option value="JPY" selected>🇯🇵 JPY (Yen)</option>
+                        <option value="EUR">🇪🇺 EUR (Euro)</option>
+                        <option value="USD">🇺🇸 USD (Dollar)</option>
+                        <option value="GBP">🇬🇧 GBP (Livre)</option>
+                        <option value="CAD">🇨🇦 CAD (Dollar CA)</option>
+                        <option value="CHF">🇨🇭 CHF (Franc CH)</option>
+                        <option value="AUD">🇦🇺 AUD (Dollar AU)</option>
+                        <option value="KRW">🇰🇷 KRW (Won)</option>
+                        <option value="CNY">🇨🇳 CNY (Yuan)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="swap-btn-container">
+                <button class="btn-swap" onclick="swapCurrencies()" title="Inverser les devises">⇅</button>
+            </div>
+
+            <div class="input-group">
+                <label>Résultat de la conversion</label>
+                <div class="input-row">
+                    <input type="number" id="amountTwo" readonly>
+                    <select id="currencyTwo">
+                        <option value="JPY">🇯🇵 JPY (Yen)</option>
+                        <option value="EUR" selected>🇪🇺 EUR (Euro)</option>
+                        <option value="USD">🇺🇸 USD (Dollar)</option>
+                        <option value="GBP">🇬🇧 GBP (Livre)</option>
+                        <option value="CAD">🇨🇦 CAD (Dollar CA)</option>
+                        <option value="CHF">🇨🇭 CHF (Franc CH)</option>
+                        <option value="AUD">🇦🇺 AUD (Dollar AU)</option>
+                        <option value="KRW">🇰🇷 KRW (Won)</option>
+                        <option value="CNY">🇨🇳 CNY (Yuan)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="rate-info" id="rateInfo">
+                Taux de change mis à jour aujourd'hui.
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ================= MENU BURGER =================
+        function toggleNav() {
+            document.getElementById('main-nav').classList.toggle('show-nav');
+        }
+
+        // ================= LOGIQUE DU CONVERTISSEUR =================
+        // Éléments du DOM (l'interface)
+        const currencyEl_one = document.getElementById('currencyOne');
+        const amountEl_one = document.getElementById('amountOne');
+        const currencyEl_two = document.getElementById('currencyTwo');
+        const amountEl_two = document.getElementById('amountTwo');
+        const rateInfo = document.getElementById('rateInfo');
+        const loader = document.getElementById('loader');
+
+        // Objet qui va stocker nos taux de change en mémoire
+        let exchangeRates = {};
+
+        // 1. Fonction pour récupérer les taux depuis l'API publique
+        async function fetchRates() {
+            loader.style.display = 'block'; // Affiche le texte de chargement
+            try {
+                // On interroge l'API avec le Yen (JPY) comme base de calcul
+                const res = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+                const data = await res.json();
+                
+                // On sauvegarde les taux dans notre variable
+                exchangeRates = data.rates;
+                
+                // On lance le premier calcul
+                calculate();
+            } catch (error) {
+                rateInfo.innerText = "❌ Erreur de connexion : Impossible de récupérer les taux en direct.";
+            } finally {
+                loader.style.display = 'none'; // Cache le texte de chargement
+            }
+        }
+
+        // 2. Fonction pour effectuer le calcul mathématique
+        function calculate() {
+            // Si les taux ne sont pas encore chargés, on arrête la fonction
+            if (Object.keys(exchangeRates).length === 0) return;
+
+            // On récupère les devises sélectionnées
+            const currencyOne = currencyEl_one.value;
+            const currencyTwo = currencyEl_two.value;
+            const amountOne = amountEl_one.value;
+
+            // Mathématiques : On ramène tout à la base JPY pour croiser les taux
+            const rateOne = exchangeRates[currencyOne];
+            const rateTwo = exchangeRates[currencyTwo];
+            
+            // Calcul croisé (ex: JPY -> USD -> EUR)
+            const finalRate = rateTwo / rateOne;
+
+            // On affiche le résultat arrondi à 2 chiffres après la virgule
+            amountEl_two.value = (amountOne * finalRate).toFixed(2);
+
+            // On affiche un petit texte informatif en bas
+            rateInfo.innerText = `1 ${currencyOne} = ${finalRate.toFixed(4)} ${currencyTwo} (Taux du jour)`;
+        }
+
+        // 3. Fonction pour inverser les deux devises
+        function swapCurrencies() {
+            const temp = currencyEl_one.value;
+            currencyEl_one.value = currencyEl_two.value;
+            currencyEl_two.value = temp;
+            calculate();
+        }
+
+        // 4. On écoute les changements de l'utilisateur pour recalculer en temps réel
+        currencyEl_one.addEventListener('change', calculate);
+        amountEl_one.addEventListener('input', calculate);
+        currencyEl_two.addEventListener('change', calculate);
+
+        // 5. Au chargement de la page, on lance la récupération des données
+        window.addEventListener('DOMContentLoaded', fetchRates);
+    </script>
+</body>
+</html>
