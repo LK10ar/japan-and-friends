@@ -60,11 +60,11 @@
         </div>
 
         <h2 class="section-title">1. Infos de base</h2>
-       <div class="row">
+        <div class="row">
             <div class="form-group col"><label>ID unique (ex: todaiji)</label><input type="text" id="inputId"></div>
             <div class="form-group col">
                 <label>Catégorie</label>
-            <select id="inputCat">
+                <select id="inputCat">
                     <optgroup label="Culture traditionnelle">
                         <option value="religion">Religion et spiritualité</option>
                         <option value="contes">Contes et légendes</option>
@@ -91,7 +91,6 @@
                         <option value="mode">Mode</option>
                         <option value="sante">Santé</option>
                     </optgroup>
-                
                     <optgroup label="Préparer son voyage">
                         <option value="avion">Avion et aéroports</option>
                         <option value="hebergement">Hébergement</option>
@@ -115,7 +114,7 @@
                         <option value="covid">Covid-19</option>
                         <option value="travaux">Travaux et fermetures</option>
                     </optgroup>
-                <optgroup label="Langue japonaise">
+                    <optgroup label="Langue japonaise">
                         <option value="traductions">Traductions</option>
                         <option value="etudier">Étudier au Japon</option>
                         <option value="kana">Kana & Kanji</option>
@@ -167,11 +166,11 @@
                     <label style="color:#aaa;">📍 Transports</label><textarea id="in_prep_transport" style="height: 100px;"></textarea>
                 </div>
                 <div class="form-group col">
-    <label style="color:#aaa;">📶 Internet</label>
-    <input type="text" id="in_prep_net" style="margin-bottom:10px;">
-    <label style="color:#aaa;">🏮 Évènements</label>
-    <textarea id="in_prep_event" style="height: 60px;"></textarea>
-</div>
+                    <label style="color:#aaa;">📶 Internet</label>
+                    <input type="text" id="in_prep_net" style="margin-bottom:10px;">
+                    <label style="color:#aaa;">🏮 Évènements</label>
+                    <textarea id="in_prep_event" style="height: 60px;"></textarea>
+                </div>
             </div>
         </div>
 
@@ -268,23 +267,19 @@
         function importerProjet() {
             try {
                 let code = document.getElementById('inputImport').value.trim();
-                if (!code) return; // Si c'est vide, on ne fait rien
+                if (!code) return; 
                 
-                // Enlever la virgule à la fin si elle a été copiée
                 if(code.endsWith(',')) code = code.slice(0, -1);
                 
                 let projet;
                 try {
-                    // Test 1 : Lecture normale (Le JSON direct envoyé par guide.html)
                     projet = JSON.parse(code);
                 } catch (e1) {
                     try {
-                        // Test 2 : Lecture de l'ancien cryptage (Si tu as d'anciennes sauvegardes)
                         let jsonStr = "";
                         try { jsonStr = decodeURIComponent(atob(code)); } catch(e2) { jsonStr = decodeURIComponent(escape(atob(code))); }
                         projet = JSON.parse(jsonStr);
                     } catch (e3) {
-                        // Test 3 : Lecture de survie (Si tu as copié avec de vrais sauts de ligne depuis Discord)
                         projet = eval('(' + code + ')');
                     }
                 }
@@ -294,7 +289,6 @@
                 document.getElementById('inputDesc').value = projet.desc || ""; document.getElementById('inputImg').value = projet.img || "";
                 document.getElementById('inputGalerie').value = projet.galerie || "";
                 
-                // Ligne modifiée : retrait de in_prep_assur
                 document.getElementById('in_prep_transport').value = projet.p_trans || ""; document.getElementById('in_prep_net').value = projet.p_net || ""; document.getElementById('in_prep_event').value = projet.p_evt || "";
                 
                 document.getElementById('in_place_quand').value = projet.s_quand || ""; document.getElementById('in_place_nom').value = projet.s_nom || "";
@@ -327,7 +321,6 @@
                 titre: document.getElementById('inputTitre').value, sousTitre: document.getElementById('inputSousTitre').value,
                 desc: document.getElementById('inputDesc').value, img: document.getElementById('inputImg').value, galerie: document.getElementById('inputGalerie').value,
                 
-                // Ligne modifiée : retrait de p_ass
                 p_trans: document.getElementById('in_prep_transport').value, p_net: document.getElementById('in_prep_net').value, p_evt: document.getElementById('in_prep_event').value,
                 
                 s_quand: document.getElementById('in_place_quand').value, s_nom: document.getElementById('in_place_nom').value, s_horaire: document.getElementById('in_place_horaire').value, s_prix: document.getElementById('in_place_prix').value, web: document.getElementById('inputWeb').value,
@@ -345,6 +338,6 @@
         }
 
         function copier(id) { document.getElementById(id).select(); document.execCommand("copy"); alert("✅ Ligne copiée ! Tu peux la coller dans data.js"); }
-</script>
+    </script>
 </body>
 </html>
