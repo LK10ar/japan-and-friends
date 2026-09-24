@@ -176,10 +176,10 @@
 </head>
 <body>
 
-    <script src="data.js"></script>
+    <script src="js/auth.js"></script>
 
     <header>
-        <img src="japan and friends.png" alt="Logo" class="logo-admin" onclick="loginAdmin()">
+        <img src="japan and friends.png" alt="Logo" class="logo-admin" onclick="location.href='profil.html'">
         <h1>Japan and Friends</h1>
         <p>Infos Pratiques & Transports</p>
     </header>
@@ -286,31 +286,27 @@
                     }
                 });
             });
-            // Charger la première catégorie par défaut
-            chargerArticles('avion'); 
+            // Charger la première catégorie par défaut, une fois les données récupérées
+            chargerBaseArticles().then(() => chargerArticles('avion'));
         });
 
-        // ================= GESTION ADMIN =================
-        function loginAdmin() {
-            if (localStorage.getItem('auth-token')) {
-                if(confirm("Désactiver le mode Administrateur ?")) {
-                    localStorage.removeItem('auth-token'); location.reload();
-                }
-            } else {
-                let pwd = prompt("Veuillez entrer le mot de passe Administrateur :");
-                if (pwd === "admin") { 
-                    localStorage.setItem('auth-token', 'connecte');
-                    alert("✅ Mode Administrateur activé !"); location.reload();
-                } else if (pwd !== null) { alert("❌ Mot de passe incorrect !"); }
-            }
-        }
-
-        if (localStorage.getItem('auth-token')) {
+        // Tout utilisateur connecté peut proposer un bon plan / une info pratique.
+        if (estConnecte()) {
             document.getElementById('btn-create-new').style.display = 'block';
             document.querySelector('.logo-admin').style.filter = 'drop-shadow(0px 0px 8px #ffb7c5)';
         }
 
-        // ================= CHARGEMENT DES ARTICLES =================
+        // ================= CHARGEMENT DES ARTICLES (depuis MongoDB) =================
+        let baseArticles = [];
+        async function chargerBaseArticles() {
+            try {
+                baseArticles = await apiFetch('/api/lieux');
+            } catch (err) {
+                console.error("Impossible de charger les infos :", err);
+                baseArticles = [];
+            }
+        }
+
         function chargerArticles(categorieRecherchee) {
             document.querySelectorAll('.menu-list a').forEach(a => a.classList.remove('actif-menu'));
             const btn = document.getElementById('btn-' + categorieRecherchee);
@@ -445,7 +441,7 @@
 
             document.getElementById('article-overlay').style.display = 'block'; document.body.style.overflow = 'hidden';
             if (mapSolo) { mapSolo.remove(); mapSolo = null; }
-            if (art.lat && art.lng) { setTimeout(() => { mapSolo = L.map('map-solo').setView([art.lat, art.lng], 15); L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapSolo); L.marker([art.lat, art.lng]).addTo(mapSolo).bindPopup(`<b>${art.titre}</b>`).openPopup(); mapSolo.invalidateSize(); }, 300); }
+            if (art.lat && art.lng) { setTimeout(() => { mapSolo = L.map('map-solo').setView([art.lat, art.lng], 15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(mapSolo); L.marker([art.lat, art.lng]).addTo(mapSolo).bindPopup(`<b>${art.titre}</b>`).openPopup(); mapSolo.invalidateSize(); }, 300); }
 
             if (localStorage.getItem('auth-token')) {
                 document.getElementById('btn-edit-art').style.display = 'block';

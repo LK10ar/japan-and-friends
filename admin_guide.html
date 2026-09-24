@@ -230,15 +230,17 @@
             </div>
         </div>
 
-        <button class="btn-generer" onclick="generer()">✨ GÉNÉRER LA LIGNE (DATA.JS) ✨</button>
+        <button class="btn-generer" onclick="generer()">✨ GÉNÉRER LA LIGNE ✨</button>
+        <button class="btn-generer" style="background:#66bb6a;" onclick="publierSurMongo()">☁️ PUBLIER SUR MONGODB</button>
 
         <div class="result-box" id="resultats">
-            <div class="result-title">✅ Copie cette ligne et ajoute-la dans <b>data.js</b></div>
+            <div class="result-title">✅ Clique sur "☁️ PUBLIER SUR MONGODB" ci-dessus pour l'enregistrer directement (ou copie cette ligne en secours)</div>
             <textarea class="code-output" id="outHtml" readonly></textarea>
             <button class="btn-copy" onclick="copier('outHtml')">📋 Copier la ligne</button>
         </div>
     </div>
 
+    <script src="js/auth.js"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const dataToLoad = localStorage.getItem('projetAEditer');
@@ -335,9 +337,25 @@
             document.getElementById('outHtml').value = jsonStr;
             document.getElementById('resultats').style.display = 'block';
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+            window.dernierProjet = projet; // pour le bouton "Publier"
         }
 
-        function copier(id) { document.getElementById(id).select(); document.execCommand("copy"); alert("✅ Ligne copiée ! Tu peux la coller dans data.js"); }
+        function copier(id) { document.getElementById(id).select(); document.execCommand("copy"); alert("✅ Ligne copiée !"); }
+
+        async function publierSurMongo() {
+            if (!estConnecte()) { alert("Connecte-toi d'abord depuis la page Profil."); location.href = 'profil.html'; return; }
+            if (!window.dernierProjet) { alert("Clique d'abord sur ✨ GÉNÉRER LA LIGNE."); return; }
+            const p = { ...window.dernierProjet };
+            p.lat = parseFloat(p.lat) || undefined;
+            p.lng = parseFloat(p.lng) || undefined;
+            try {
+                await apiFetch('/api/lieux', { method: 'POST', body: JSON.stringify(p) });
+                alert("✅ Publié sur MongoDB ! Visible immédiatement dans la page correspondante (Guide Culturel, Mots Utiles ou Bons Plans, selon la catégorie choisie).");
+            } catch (err) {
+                alert("❌ " + err.message);
+            }
+        }
     </script>
 </body>
 </html>

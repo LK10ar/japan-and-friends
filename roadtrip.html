@@ -242,6 +242,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     
+    <script src="js/auth.js"></script>
     <script>
         // --- JAVASCRIPT : MENU BURGER ---
         function toggleNav() {
@@ -257,7 +258,8 @@
 
         // --- GESTION DE LA CONNEXION SÉCURISÉE ---
         function verifierConnexion() {
-            const savedUser = localStorage.getItem('roadtripUser');
+            // Compatible avec le compte créé/connecté depuis la page Profil (clé partagée 'username').
+            const savedUser = localStorage.getItem('roadtripUser') || localStorage.getItem('username');
             const savedToken = localStorage.getItem('auth-token');
             
             if (savedUser && savedToken) {
@@ -306,6 +308,8 @@
                     const data = await response.json();
                     localStorage.setItem('auth-token', data.token);
                     localStorage.setItem('roadtripUser', data.username);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('avatarUrl', data.avatarUrl || "");
                     verifierConnexion();
                 } else { const errorMsg = await response.text(); alert("❌ Accès refusé : " + errorMsg); }
             } catch (error) { alert("Impossible de joindre le serveur."); }
@@ -313,6 +317,8 @@
 
         function seDeconnecter() {
             localStorage.removeItem('roadtripUser');
+            localStorage.removeItem('username');
+            localStorage.removeItem('avatarUrl');
             localStorage.removeItem('auth-token');
             currentUser = null; authToken = null; etapes = []; 
             dessinerItineraire(); 
@@ -323,7 +329,7 @@
 
         // --- INITIALISATION CARTE LEAFLET ---
         const map = L.map('map').setView([36.2048, 138.2529], 6);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
         let groupeClusters = L.markerClusterGroup({
             iconCreateFunction: function(cluster) {

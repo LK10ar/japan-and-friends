@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Profil - Japan and Friends</title>
+<style>
+    :root {
+        --bg-noir: #121212; --bg-gris-fonce: #1e1e1e;
+        --texte-clair: #f5f5f5; --couleur-sakura: #ffb7c5;
+        --texte-fonce: #121212; --bordure-kanpai: #444;
+    }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 0; background-color: var(--bg-noir); color: var(--texte-clair); }
+    header { background-color: var(--bg-gris-fonce); padding: 20px; text-align: center; border-bottom: 2px solid var(--couleur-sakura); }
+    header h1 { margin: 0; font-size: 32px; color: var(--couleur-sakura); }
+    .nav-container { background-color: #000; }
+    .menu-burger { display: none; background: transparent; color: var(--couleur-sakura); border: none; padding: 15px; font-size: 18px; cursor: pointer; width: 100%; text-align: center; font-weight: bold; border-bottom: 1px solid #333; }
+    nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 15px; }
+    nav a { color: var(--texte-clair); text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
+    nav a:hover { background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; }
+
+    .conteneur { max-width: 700px; margin: 30px auto; padding: 0 15px; }
+    .carte { background: var(--bg-gris-fonce); border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); }
+    .carte h2 { color: var(--couleur-sakura); margin-top: 0; border-bottom: 1px solid var(--bordure-kanpai); padding-bottom: 10px; }
+    label { display: block; margin: 12px 0 5px; font-size: 14px; color: #ccc; }
+    input { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid var(--bordure-kanpai); background: #000; color: white; font-size: 15px; }
+    .btn { margin-top: 18px; width: 100%; padding: 12px; border: none; border-radius: 25px; background-color: var(--couleur-sakura); color: var(--texte-fonce); font-weight: bold; cursor: pointer; font-size: 15px; }
+    .btn:hover { background: white; }
+    .btn-secondaire { background: transparent; border: 1px solid var(--couleur-sakura); color: var(--couleur-sakura); }
+    .lien-switch { text-align: center; margin-top: 15px; font-size: 13px; color: #90caf9; cursor: pointer; }
+    .msg { text-align: center; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 14px; }
+    .msg-erreur { background: rgba(198,40,40,0.2); color: #ff8a80; }
+    .msg-ok { background: rgba(76,175,80,0.2); color: #a5d6a7; }
+
+    .profil-header { display: flex; align-items: center; gap: 20px; }
+    .avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--couleur-sakura); background: #333; }
+    .favoris-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 15px; }
+    .fav-card { background: #000; border-radius: 8px; overflow: hidden; text-decoration: none; color: white; border: 1px solid #333; transition: 0.2s; }
+    .fav-card:hover { border-color: var(--couleur-sakura); }
+    .fav-card img { width: 100%; height: 80px; object-fit: cover; }
+    .fav-card .fav-titre { padding: 8px; font-size: 13px; }
+    .vide { color: #888; font-size: 14px; font-style: italic; }
+
+    @media (max-width: 700px) {
+        .menu-burger { display: block; }
+        nav { display: none; flex-direction: column; padding: 0; width: 100%; }
+        nav.show-nav { display: flex; }
+        nav a { border-radius: 0; border-bottom: 1px solid #222; padding: 15px; width: 100%; box-sizing: border-box; text-align: center; }
+        .profil-header { flex-direction: column; text-align: center; }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Japan and Friends</h1>
+    <p>Mon espace personnel</p>
+</header>
+
+<div class="nav-container">
+    <button class="menu-burger" onclick="document.getElementById('main-nav').classList.toggle('show-nav')">☰ Menu Principal</button>
+    <nav id="main-nav">
+        <a href="index.html">Carte & Activités</a>
+        <a href="vocabulaire.html">Mots Utiles</a>
+        <a href="convertisseur.html">Convertisseur Yen/Euro</a>
+        <a href="infos.html">Bons Plans & Transports</a>
+        <a href="budget.html">Mon Solde</a>
+        <a href="roadtrip.html">Itinéraire 90 Jours</a>
+        <a href="guide.html">Guide Culturel</a>
+    </nav>
+</div>
+
+<div class="conteneur">
+
+    <!-- BLOC CONNEXION / INSCRIPTION -->
+    <div class="carte" id="bloc-auth">
+        <h2 id="titre-auth">Connexion</h2>
+        <div id="champ-username">
+            <label>Pseudo</label>
+            <input type="text" id="inputPseudo" placeholder="Ton pseudo">
+        </div>
+        <label>Mot de passe</label>
+        <input type="password" id="inputMdp" placeholder="Ton mot de passe">
+        <button class="btn" id="btnValider">Se connecter</button>
+        <div class="lien-switch" id="lienSwitch">Pas encore de compte ? Inscris-toi</div>
+        <div id="zoneMessage"></div>
+    </div>
+
+    <!-- BLOC PROFIL (visible si connecté) -->
+    <div class="carte" id="bloc-profil" style="display:none;">
+        <div class="profil-header">
+            <img class="avatar" id="avatarPreview" src="" alt="Avatar">
+            <div>
+                <h2 style="border:none; margin-bottom:5px;" id="nomAffiche"></h2>
+                <p style="color:#888; margin:0; font-size:13px;">Membre de Japan and Friends</p>
+            </div>
+        </div>
+        <label>Photo de profil (colle un lien d'image, ex: imgur, unsplash...)</label>
+        <input type="text" id="inputAvatar" placeholder="https://...">
+        <button class="btn" id="btnSauverAvatar">Mettre à jour ma photo</button>
+        <button class="btn btn-secondaire" style="margin-top:10px;" onclick="deconnexion()">Se déconnecter</button>
+        <div id="zoneMessageProfil"></div>
+    </div>
+
+    <!-- BLOC FAVORIS -->
+    <div class="carte" id="bloc-favoris" style="display:none;">
+        <h2>⭐ Mes lieux favoris</h2>
+        <div class="favoris-grid" id="grilleFavoris"><p class="vide">Chargement...</p></div>
+    </div>
+
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+    let modeInscription = false;
+
+    document.getElementById('lienSwitch').addEventListener('click', () => {
+        modeInscription = !modeInscription;
+        document.getElementById('titre-auth').innerText = modeInscription ? "Inscription" : "Connexion";
+        document.getElementById('btnValider').innerText = modeInscription ? "Créer mon compte" : "Se connecter";
+        document.getElementById('lienSwitch').innerText = modeInscription ? "Déjà un compte ? Connecte-toi" : "Pas encore de compte ? Inscris-toi";
+        document.getElementById('zoneMessage').innerHTML = "";
+    });
+
+    document.getElementById('btnValider').addEventListener('click', async () => {
+        const username = document.getElementById('inputPseudo').value.trim();
+        const password = document.getElementById('inputMdp').value;
+        const zone = document.getElementById('zoneMessage');
+        if (!username || !password) { zone.innerHTML = `<div class="msg msg-erreur">Remplis les deux champs.</div>`; return; }
+
+        try {
+            if (modeInscription) {
+                const data = await apiFetch('/api/register', { method: 'POST', body: JSON.stringify({ username, password }) });
+                zone.innerHTML = `<div class="msg msg-ok">${data.message} Connecte-toi maintenant.</div>`;
+                modeInscription = false;
+                document.getElementById('titre-auth').innerText = "Connexion";
+                document.getElementById('btnValider').innerText = "Se connecter";
+                document.getElementById('lienSwitch').innerText = "Pas encore de compte ? Inscris-toi";
+            } else {
+                const data = await apiFetch('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+                localStorage.setItem('auth-token', data.token);
+                localStorage.setItem('username', data.username);
+                localStorage.setItem('avatarUrl', data.avatarUrl || "");
+                afficherProfil();
+            }
+        } catch (err) {
+            zone.innerHTML = `<div class="msg msg-erreur">${err.message}</div>`;
+        }
+    });
+
+    document.getElementById('btnSauverAvatar').addEventListener('click', async () => {
+        const avatarUrl = document.getElementById('inputAvatar').value.trim();
+        const zone = document.getElementById('zoneMessageProfil');
+        try {
+            await apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ avatarUrl }) });
+            localStorage.setItem('avatarUrl', avatarUrl);
+            document.getElementById('avatarPreview').src = avatarUrl || 'https://via.placeholder.com/90?text=%F0%9F%97%BE';
+            zone.innerHTML = `<div class="msg msg-ok">Photo mise à jour !</div>`;
+        } catch (err) {
+            zone.innerHTML = `<div class="msg msg-erreur">${err.message}</div>`;
+        }
+    });
+
+    async function afficherProfil() {
+        document.getElementById('bloc-auth').style.display = 'none';
+        document.getElementById('bloc-profil').style.display = 'block';
+        document.getElementById('bloc-favoris').style.display = 'block';
+        document.getElementById('nomAffiche').innerText = getUsername();
+        document.getElementById('avatarPreview').src = getAvatar() || 'https://via.placeholder.com/90?text=%F0%9F%97%BE';
+        document.getElementById('inputAvatar').value = getAvatar();
+
+        try {
+            const profil = await apiFetch('/api/profile');
+            const grille = document.getElementById('grilleFavoris');
+            if (!profil.favorisLieux || profil.favorisLieux.length === 0) {
+                grille.innerHTML = `<p class="vide">Aucun favori pour l'instant. Ajoute des lieux depuis le Guide Culturel !</p>`;
+                return;
+            }
+            grille.innerHTML = profil.favorisLieux.map(l => `
+                <a class="fav-card" href="article.html?id=${l.id}">
+                    <img src="${l.img}" alt="${l.titre}">
+                    <div class="fav-titre">${l.titre}</div>
+                </a>
+            `).join('');
+        } catch (err) {
+            document.getElementById('grilleFavoris').innerHTML = `<p class="vide">Impossible de charger les favoris.</p>`;
+        }
+    }
+
+    if (estConnecte()) afficherProfil();
+</script>
+</body>
+</html>
