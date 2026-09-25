@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todai-ji - Japan and Friends</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root { --bg-site: #121212; --texte-principal: #f5f5f5; --kanpai-rouge: #c62828; --couleur-sakura: #ffb7c5; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background-color: var(--bg-site); color: var(--texte-principal); padding-bottom: 50px;}
+        nav { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; background-color: #000; padding: 15px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid var(--couleur-sakura);}
+        nav a { color: #f5f5f5; text-decoration: none; padding: 8px 12px; border-radius: 20px; transition: 0.3s; font-size: 14px; }
+        nav a:hover { background-color: var(--couleur-sakura); color: #000; font-weight: bold; }
+        
+        .article-banner { width: 100%; height: 450px; overflow: hidden; }
+        .article-banner img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+        
+        .article-container { max-width: 960px; margin: -50px auto 30px auto; padding: 40px; background-color: #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-radius: 8px; position: relative; z-index: 10; border: 1px solid #333;}
+        .article-main-title { text-align: center; font-size: 42px; margin: 0 0 10px 0; color: #fff; text-transform: uppercase; }
+        .article-subtitle { text-align: center; font-size: 20px; color: #aaa; margin: 0 0 30px 0; }
+        .title-separator { width: 60px; height: 5px; background-color: var(--kanpai-rouge); margin: 0 auto 30px auto; }
+        
+        .section-heading-inline { color: var(--kanpai-rouge); margin-top: 45px; border-bottom: 1px solid #333; padding-bottom: 8px; font-size: 24px;}
+        .article-content p { line-height: 1.9; font-size: 16.5px; margin-bottom: 20px; color: #ccc; }
+        .article-in-img { width: 100%; border-radius: 8px; margin: 25px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 8px; overflow: hidden; margin: 25px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); grid-auto-rows: 200px; grid-auto-flow: dense; gap: 10px; margin-top: 20px; }
+        .gallery-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .gallery-img:hover { transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 2; }
+        .gallery-img.md { grid-row: span 2; }
+        .gallery-img.lg { grid-column: span 2; grid-row: span 2; }
+
+        #lightbox { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:10001; align-items:center; justify-content:center; user-select: none;}
+        #lightbox-img { max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 0 30px rgba(0,0,0,0.8); transition: 0.3s; }
+        .lb-btn { position:absolute; color:white; font-size:60px; cursor:pointer; font-weight:bold; text-shadow: 0 0 10px #000; transition: 0.2s; opacity: 0.7;}
+        .lb-btn:hover { opacity: 1; color: var(--couleur-sakura); }
+        #lb-close { top:20px; right:40px; font-size: 50px; }
+        #lb-prev { left:30px; }
+        #lb-next { right:30px; }
+
+        .kanpai-section-title { text-align: center; margin-top: 60px; margin-bottom: 30px;}
+        .kanpai-section-title .icon { font-size: 40px; margin-bottom: -10px; display: block; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));}
+        .kanpai-section-title h2 { color: #fff; text-transform: uppercase; font-size: 24px; margin-bottom: 10px; letter-spacing: 1px;}
+        .kanpai-section-title .sep { width: 40px; height: 6px; background-color: var(--kanpai-rouge); margin: 0 auto; }
+        
+        .pratique-section { display: flex; gap: 40px; margin-top: 30px; }
+        .pratique-col { flex: 1; }
+        .pratique-item { margin-bottom: 25px; }
+        .pratique-item h4 { color: var(--couleur-sakura); font-size: 18px; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #333; padding-bottom: 8px;}
+        .pratique-item p { color: #bbb; font-size: 15px; margin: 0; line-height: 1.6;}
+        .btn-site { display: inline-block; margin-top: 10px; padding: 8px 15px; background: var(--kanpai-rouge); color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px; transition:0.3s;}
+        .btn-site:hover { background: var(--couleur-sakura); color: black;}
+
+        .map-weather-container { display: flex; gap: 20px; background: #222; padding: 20px; border-radius: 8px; border: 1px solid #333;}
+        #map-solo { height: 350px; flex: 1; border-radius: 8px; border: 2px solid #444; z-index: 1;}
+        .weather-box { width: 320px; flex-shrink: 0; background: #111; border-radius: 8px; padding: 10px; border: 1px solid #333; overflow: hidden;}
+
+        .carousel-container { display: flex; gap: 20px; overflow-x: auto; padding: 10px 5px 20px 5px; scroll-snap-type: x mandatory; }
+        .carousel-container::-webkit-scrollbar { height: 8px; }
+        .carousel-container::-webkit-scrollbar-track { background: #222; border-radius: 10px; }
+        .carousel-container::-webkit-scrollbar-thumb { background: var(--kanpai-rouge); border-radius: 10px; }
+        .carousel-card { flex: 0 0 320px; background: #222; border: 1px solid #333; border-radius: 8px; text-decoration: none; color: white; scroll-snap-align: start; transition: 0.3s; display: flex; flex-direction: column;}
+        .carousel-card:hover { transform: translateY(-5px); border-color: var(--couleur-sakura); box-shadow: 0 10px 20px rgba(0,0,0,0.5);}
+        .card-img-wrapper { position: relative; height: 180px; width: 100%;}
+        .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px 8px 0 0; }
+        .card-distance { position: absolute; top: 10px; left: 10px; background: #333; color: white; padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid #555;}
+        .card-body { padding: 20px; flex-grow: 1;}
+        .card-title { border-left: 4px solid var(--kanpai-rouge); padding-left: 10px; color: var(--kanpai-rouge); font-size: 20px; margin: 0 0 8px 0; line-height: 1.2; text-transform: uppercase; font-weight: 900;}
+        .card-subtitle { font-size: 14px; font-weight: bold; color: #ccc;}
+
+        @media (max-width: 768px) { 
+            .article-container { padding: 20px; margin-top: 0; border-radius: 0; border: none;} 
+            .article-banner { height: 250px; } 
+            .photo-gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; } 
+            .gallery-img.lg, .gallery-img.md { grid-column: span 1; grid-row: span 1; } 
+            .pratique-section { flex-direction: column; gap: 0; }
+            .map-weather-container { flex-direction: column; } 
+            .weather-box { width: 100%; box-sizing: border-box;}
+            #map-solo { height: 350px !important; min-height: 350px; width: 100%; display: block; flex: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Carte</a>
+        <a href="vocabulaire.html">Mots Utiles</a>
+        <a href="convertisseur.html">Convertisseur Yen/Euro</a>
+        <a href="infos.html">Bons Plans & Transports</a>
+        <a href="budget.html">Mon Solde</a>
+        <a href="roadtrip.html">Itinéraire 90 Jours</a>
+        <a href="guide.html">Guide Culturel</a>
+    </nav>
+
+    <div class="article-banner"><img src="https://www.kanpai.fr/sites/default/files/styles/big_header_lg/public/uploads/2020/06/nara-covid19-printemps-2020-5.jpg" alt="Todai-ji"></div>
+
+    <main class="article-container">
+        <h1 class="article-main-title">Todai-ji</h1>
+        <h2 class="article-subtitle">Le temple au Grand Bouddha de Nara</h2>
+        <div class="title-separator"></div>
+
+        <div class="article-content">
+            <p>Le Todai-ji est un temple bouddhique situé à Nara, sur l'île principale de Honshu. Ce grand temple de l'est abrite notamment le bâtiment Daibutsu-den, connue pour être la plus grande construction en bois du monde et hébergeant un monumental Grand Bouddha assis en bronze. Il est classé au patrimoine mondial de l'Unesco au titre des monuments historiques de l'ancienne Nara.</p>
+
+            <h3 class="section-heading-inline">Un site incontournable de Nara</h3>
+<p>Et pour cause, sa célébrité est notamment due à la pièce maîtresse de son architecture : une majestueuse statue en bronze de Bouddha assis, qui représente Vairocana (Dainichi Nyorai) et mesure la bagatelle de 18 mètres de haut et 250 tonnes. Il se loge ainsi entre ses comparses de Kamakura (13m) et Nokogiriyama (31m), certes loin de la bien plus récente représentation debout à Ushiku (120m !).</p>
+
+            <img src="https://www.kanpai.fr/sites/default/files/styles/content_lg/public/uploads/2014/04/todai-ji-26.jpg" class="article-in-img">
+
+            <h3 class="section-heading-inline">Contempler le plus vieux Daibutsu du Japon</h3>
+<p>Mais il est également et peut-être surtout le plus vieux Bouddha de la bande, puisque sa construction remonte au milieu du VIIIe siècle, alors que Nara était encore la capitale du Japon. À ses côtés, d'autres immenses statues tout aussi impressionnantes complètent une visite très riche pour les mirettes.</p>
+            <p>Daibutsu-den, le superbe bâtiment qui les héberge, fut reconstruit pour la dernière fois en 1692 suite à un incendie, aux deux-tiers de sa taille originelle. Il reste malgré tout, à ce jour, la plus grande construction en bois du monde. Pas étonnant qu'il figure en bonne place au patrimoine mondial de l'Unesco.</p>
+
+            <img src="https://www.kanpai.fr/sites/default/files/styles/content_lg/public/uploads/2014/04/todai-ji-35.jpg" class="article-in-img">
+
+        </div>
+
+        
+        <div class="photo-gallery">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2020/06/nara-covid19-printemps-2020-5.jpg" alt="Galerie" class="gallery-img md" onclick="ouvrirLightbox(0)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-2.jpg" alt="Galerie" class="gallery-img lg" onclick="ouvrirLightbox(1)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-6.jpg" alt="Galerie" class="gallery-img md" onclick="ouvrirLightbox(2)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-1.jpg" alt="Galerie" class="gallery-img md" onclick="ouvrirLightbox(3)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_2_3/public/uploads/2014/04/todai-ji-35.jpg" alt="Galerie" class="gallery-img lg" onclick="ouvrirLightbox(4)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-5.jpg" alt="Galerie" class="gallery-img " onclick="ouvrirLightbox(5)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2020/06/nara-covid19-printemps-2020-6.jpg" alt="Galerie" class="gallery-img md" onclick="ouvrirLightbox(6)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-25.jpg" alt="Galerie" class="gallery-img " onclick="ouvrirLightbox(7)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-30.jpg" alt="Galerie" class="gallery-img " onclick="ouvrirLightbox(8)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_1_2/public/uploads/2014/04/todai-ji-29.jpg" alt="Galerie" class="gallery-img md" onclick="ouvrirLightbox(9)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_2_3/public/uploads/2014/04/todai-ji-35.jpg" alt="Galerie" class="gallery-img lg" onclick="ouvrirLightbox(10)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_2_3/public/uploads/2014/04/todai-ji-12.jpg" alt="Galerie" class="gallery-img " onclick="ouvrirLightbox(11)">
+            <img src="https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-17.jpg" alt="Galerie" class="gallery-img lg" onclick="ouvrirLightbox(12)">
+        </div>
+        
+        <div class="kanpai-section-title">
+            <span class="icon">📋</span>
+            <h2>Se Préparer</h2>
+            <div class="sep"></div>
+        </div>
+        <div class="pratique-section">
+            <div class="pratique-col">
+                <div class="pratique-item"><h4>📍 Comment se rendre au Todai-ji ?</h4><p>À pied -- Environ 30 minutes à pied (2,7 km) depuis la gare JR, ou 20 minutes depuis la gare Kintetsu. Accessible facilement depuis le grand parc de Nara<br><br>En bus -- Arrêt "Todaiji Daibutsuden" puis 5 minutes de marche<br><br>Destination non accessible avec le JR Pass<br><br>S'y rendre avec la carte Suica, un billet de train à l'unité ou en voiture de location</p></div>
+            </div>
+            <div class="pratique-col">
+                <div class="pratique-item"><h4>📶 Connexion Internet</h4><p>Restez connectés avec un Pocket Wifi au Japon</p></div>
+                <div class="pratique-item"><h4>🧳 Assurance voyage</h4><p>Prenez une assurance en cas d'annulation ou accident</p></div>
+                <div class="pratique-item"><h4>🏮 Évènements au Todai-ji</h4><p>7 août -- Dépoussiérage du Bouddha du Todai-ji à Nara, de 7h30 à 9h30 (tradition annuelle depuis 1964)<br>8 avril -- Hana Matsuri : festival des fleurs pour célébrer la naissance de Bouddha</p></div>
+            </div>
+        </div>
+        
+        <div class="kanpai-section-title">
+            <h2>Informations</h2>
+            <div class="sep"></div>
+        </div>
+        <div class="map-weather-container">
+            <div id="map-solo"></div>
+            <div class="weather-box"><div id="ww_f9cfc983a2d0d" v='1.3' loc='id' a='{"t":"horizontal","lang":"fr","sl_lpl":1,"ids":["wl6857"],"font":"Arial","sl_ics":"one_a","sl_sot":"celsius","cl_bkg":"#000000","cl_font":"#FFFFFF","cl_cloud":"#FFFFFF","cl_persp":"#81D4FA","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722"}'>Plus de prévisions: <a href="https://oneweather.org/ja/tokyo/10_days/" id="ww_f9cfc983a2d0d_u" target="_blank">oneweather.org</a></div><script async src="https://app3.weatherwidget.org/js/?id=ww_f9cfc983a2d0d"></script></div>
+        </div>
+        
+        <div class="kanpai-section-title">
+            <span class="icon">⛩️</span>
+            <h2>Sur Place</h2>
+            <div class="sep"></div>
+        </div>
+        <div class="pratique-section">
+            <div class="pratique-col">
+                <div class="pratique-item"><h4>📅 Quand partir au Todai-ji ?</h4><p>Une à deux heures<br><br>À visiter de préférence en début de printemps pour la floraison des cerisiers, ainsi que le festival Omizutori (torches géantes) au Nigatsu-do chaque soir du 1er au 14 mars</p></div>
+                <div class="pratique-item"><h4>🗣️ Comment dit-on en japonais ?</h4><p>東大寺 (Tôdaiji)<br>Autre(s) nom(s) : 華厳宗大本山東大寺 (Kegonshû Daihonzan Tôdaiji)</p></div>
+            </div>
+            <div class="pratique-col">
+                <div class="pratique-item"><h4>🕒 Horaires</h4><p>Ouvert tous les jours de l'année :<br><br>De novembre à mars : 8h - 17h<br>D'avril à octobre : 7h30 - 17h30<br>Ouverture du musée à 9h30<br><br>Dernière entrée 30 minutes avant la fermeture</p></div>
+                <div class="pratique-item"><h4>💴 Combien ça coûte ?</h4><p>Parc (enceinte) gratuit<br><br>À partir du 01er avril 2024 :<br>Daibutsuden seul : 800¥ (~4,28€)<br>Musée seul : 800¥ (~4,28€)<br>Ticket combiné Daibutsuden + musée : 1.200¥ (~6,42€)</p></div>
+                <div class="pratique-item"><h4>🔗 Site Web</h4><a href="https://www.todaiji.or.jp/en/" target="_blank" class="btn-site">Site Officiel</a></div>
+            </div>
+        </div>
+        
+        <div class="kanpai-section-title">
+            <span class="icon">🧭</span>
+            <h2>Que voir autour de Todai-ji ?</h2>
+            <div class="sep"></div>
+        </div>
+        <div class="carousel-container">
+            <a href="guide.html" class="carousel-card"><div class="card-img-wrapper"><span class="card-distance">📍 à ~400 m</span><img src="https://www.kanpai.fr/sites/default/files/styles/content_lg/public/uploads/2014/04/parc-nara-12.jpg"></div><div class="card-body"><h5 class="card-title">Parc de Nara</h5><div class="card-subtitle">Le parc aux cerfs sacrÃ©s</div></div></a>
+            <a href="guide.html" class="carousel-card"><div class="card-img-wrapper"><span class="card-distance">📍 à ~450 m</span><img src="https://www.kanpai.fr/sites/default/files/styles/content_lg/public/uploads/2014/05/kasuga-taisha-6.jpg"></div><div class="card-body"><h5 class="card-title">Kasuga Taisha</h5><div class="card-subtitle">Le sanctuaire aux lanternes</div></div></a>
+            <a href="guide.html" class="carousel-card"><div class="card-img-wrapper"><span class="card-distance">📍 à ~800 m</span><img src="https://www.kanpai.fr/sites/default/files/styles/content_lg/public/uploads/2014/04/kofuku-ji-2.jpg"></div><div class="card-body"><h5 class="card-title">Kofuku-ji</h5><div class="card-subtitle">La pagodd Ã  5 Ã©tages</div></div></a>
+        </div>
+
+    </main>
+
+    <div id="admin-panel" style="display:none; position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <button onclick="ouvrirEditeur()" style="background: var(--kanpai-rouge); color: white; border: none; padding: 15px 20px; border-radius: 30px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight: bold; transition: 0.3s;">✏️ Modifier la page</button>
+    </div>
+
+    <div id="lightbox">
+        <span class="lb-btn" id="lb-close" onclick="fermerLightbox()">&times;</span>
+        <span class="lb-btn" id="lb-prev" onclick="changeImg(-1)">&#10094;</span>
+        <span class="lb-btn" id="lb-next" onclick="changeImg(1)">&#10095;</span>
+        <img id="lightbox-img">
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const mapSolo = L.map('map-solo').setView([34.6883, 135.8398], 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapSolo);
+        L.marker([34.6883, 135.8398]).addTo(mapSolo).bindPopup("<b>Todai-ji</b>").openPopup();
+        setTimeout(() => { mapSolo.invalidateSize(); }, 500); 
+
+        if (localStorage.getItem('auth-token')) { document.getElementById('admin-panel').style.display = 'block'; }
+        function ouvrirEditeur() {
+            localStorage.setItem('projetAEditer', "JTdCJTIyaWQlMjIlM0ElMjJ0b2RhaWppJTIyJTJDJTIyY2F0JTIyJTNBJTIycmVsaWdpb24lMjIlMkMlMjJ0aXRyZSUyMiUzQSUyMlRvZGFpLWppJTIyJTJDJTIyc291c1RpdHJlJTIyJTNBJTIyTGUlMjB0ZW1wbGUlMjBhdSUyMEdyYW5kJTIwQm91ZGRoYSUyMGRlJTIwTmFyYSUyMiUyQyUyMmRlc2MlMjIlM0ElMjJMZSUyMFRvZGFpLWppJTIwZXN0JTIwdW4lMjB0ZW1wbGUlMjBib3VkZGhpcXVlJTIwc2l0dSVDMyVBOSUyMCVDMyVBMCUyME5hcmElMkMlMjBzdXIlMjBsJyVDMyVBRWxlJTIwcHJpbmNpcGFsZSUyMGRlJTIwSG9uc2h1LiUyMiUyQyUyMmltZyUyMiUzQSUyMmh0dHBzJTNBJTJGJTJGd3d3LmthbnBhaS5mciUyRnNpdGVzJTJGZGVmYXVsdCUyRmZpbGVzJTJGc3R5bGVzJTJGYmlnX2hlYWRlcl9sZyUyRnB1YmxpYyUyRnVwbG9hZHMlMkYyMDIwJTJGMDYlMkZuYXJhLWNvdmlkMTktcHJpbnRlbXBzLTIwMjAtNS5qcGclMjIlMkMlMjJnYWxlcmllJTIyJTNBJTIyaHR0cHMlM0ElMkYlMkZ3d3cua2FucGFpLmZyJTJGc2l0ZXMlMkZkZWZhdWx0JTJGZmlsZXMlMkZzdHlsZXMlMkZnYWxsZXJ5X3NxdWFyZV9zbSUyRnB1YmxpYyUyRnVwbG9hZHMlMkYyMDIwJTJGMDYlMkZuYXJhLWNvdmlkMTktcHJpbnRlbXBzLTIwMjAtNS5qcGclNUNuaHR0cHMlM0ElMkYlMkZ3d3cua2FucGFpLmZyJTJGc2l0ZXMlMkZkZWZhdWx0JTJGZmlsZXMlMkZzdHlsZXMlMkZnYWxsZXJ5X3NxdWFyZV9zbSUyRnB1YmxpYyUyRnVwbG9hZHMlMkYyMDE0JTJGMDQlMkZ0b2RhaS1qaS0yLmpwZyU1Q25odHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmdhbGxlcnlfc3F1YXJlX3NtJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRnRvZGFpLWppLTYuanBnJTVDbmh0dHBzJTNBJTJGJTJGd3d3LmthbnBhaS5mciUyRnNpdGVzJTJGZGVmYXVsdCUyRmZpbGVzJTJGc3R5bGVzJTJGZ2FsbGVyeV9zcXVhcmVfc20lMkZwdWJsaWMlMkZ1cGxvYWRzJTJGMjAxNCUyRjA0JTJGdG9kYWktamktMS5qcGclNUNuaHR0cHMlM0ElMkYlMkZ3d3cua2FucGFpLmZyJTJGc2l0ZXMlMkZkZWZhdWx0JTJGZmlsZXMlMkZzdHlsZXMlMkZnYWxsZXJ5XzJfMyUyRnB1YmxpYyUyRnVwbG9hZHMlMkYyMDE0JTJGMDQlMkZ0b2RhaS1qaS0zNS5qcGclNUNuaHR0cHMlM0ElMkYlMkZ3d3cua2FucGFpLmZyJTJGc2l0ZXMlMkZkZWZhdWx0JTJGZmlsZXMlMkZzdHlsZXMlMkZnYWxsZXJ5X3NxdWFyZV9zbSUyRnB1YmxpYyUyRnVwbG9hZHMlMkYyMDE0JTJGMDQlMkZ0b2RhaS1qaS01LmpwZyU1Q25odHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmdhbGxlcnlfc3F1YXJlX3NtJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMjAlMkYwNiUyRm5hcmEtY292aWQxOS1wcmludGVtcHMtMjAyMC02LmpwZyU1Q25odHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmdhbGxlcnlfc3F1YXJlX3NtJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRnRvZGFpLWppLTI1LmpwZyU1Q25odHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmdhbGxlcnlfc3F1YXJlX3NtJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRnRvZGFpLWppLTMwLmpwZyU1Q25odHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmdhbGxlcnlfMV8yJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRnRvZGFpLWppLTI5LmpwZyU1Q25odHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmdhbGxlcnlfMl8zJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRnRvZGFpLWppLTM1LmpwZyU1Q25odHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmdhbGxlcnlfMl8zJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRnRvZGFpLWppLTEyLmpwZyU1Q25odHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmdhbGxlcnlfc3F1YXJlX3NtJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRnRvZGFpLWppLTE3LmpwZyU1Q24lNUNuJTVDbiUyMiUyQyUyMnBfdHJhbnMlMjIlM0ElMjIlQzMlODAlMjBwaWVkJTIwLS0lMjBFbnZpcm9uJTIwMzAlMjBtaW51dGVzJTIwJUMzJUEwJTIwcGllZCUyMCgyJTJDNyUyMGttKSUyMGRlcHVpcyUyMGxhJTIwZ2FyZSUyMEpSJTJDJTIwb3UlMjAyMCUyMG1pbnV0ZXMlMjBkZXB1aXMlMjBsYSUyMGdhcmUlMjBLaW50ZXRzdS4lMjBBY2Nlc3NpYmxlJTIwZmFjaWxlbWVudCUyMGRlcHVpcyUyMGxlJTIwZ3JhbmQlMjBwYXJjJTIwZGUlMjBOYXJhJTVDbiU1Q25FbiUyMGJ1cyUyMC0tJTIwQXJyJUMzJUFBdCUyMCU1QyUyMlRvZGFpamklMjBEYWlidXRzdWRlbiU1QyUyMiUyMHB1aXMlMjA1JTIwbWludXRlcyUyMGRlJTIwbWFyY2hlJTVDbiU1Q25EZXN0aW5hdGlvbiUyMG5vbiUyMGFjY2Vzc2libGUlMjBhdmVjJTIwbGUlMjBKUiUyMFBhc3MlNUNuJTVDblMneSUyMHJlbmRyZSUyMGF2ZWMlMjBsYSUyMGNhcnRlJTIwU3VpY2ElMkMlMjB1biUyMGJpbGxldCUyMGRlJTIwdHJhaW4lMjAlQzMlQTAlMjBsJ3VuaXQlQzMlQTklMjBvdSUyMGVuJTIwdm9pdHVyZSUyMGRlJTIwbG9jYXRpb24lMjIlMkMlMjJwX25ldCUyMiUzQSUyMlJlc3RleiUyMGNvbm5lY3QlQzMlQTlzJTIwYXZlYyUyMHVuJTIwUG9ja2V0JTIwV2lmaSUyMGF1JTIwSmFwb24lMjIlMkMlMjJwX2FzcyUyMiUzQSUyMlByZW5leiUyMHVuZSUyMGFzc3VyYW5jZSUyMGVuJTIwY2FzJTIwZCdhbm51bGF0aW9uJTIwb3UlMjBhY2NpZGVudCUyMiUyQyUyMnBfZXZ0JTIyJTNBJTIyNyUyMGFvJUMzJUJCdCUyMC0tJTIwRCVDMyVBOXBvdXNzaSVDMyVBOXJhZ2UlMjBkdSUyMEJvdWRkaGElMjBkdSUyMFRvZGFpLWppJTIwJUMzJUEwJTIwTmFyYSUyQyUyMGRlJTIwN2gzMCUyMCVDMyVBMCUyMDloMzAlMjAodHJhZGl0aW9uJTIwYW5udWVsbGUlMjBkZXB1aXMlMjAxOTY0KSU1Q244JTIwYXZyaWwlMjAtLSUyMEhhbmElMjBNYXRzdXJpJTIwJTNBJTIwZmVzdGl2YWwlMjBkZXMlMjBmbGV1cnMlMjBwb3VyJTIwYyVDMyVBOWwlQzMlQTlicmVyJTIwbGElMjBuYWlzc2FuY2UlMjBkZSUyMEJvdWRkaGElMjIlMkMlMjJzX3F1YW5kJTIyJTNBJTIyVW5lJTIwJUMzJUEwJTIwZGV1eCUyMGhldXJlcyU1Q24lNUNuJUMzJTgwJTIwdmlzaXRlciUyMGRlJTIwcHIlQzMlQTlmJUMzJUE5cmVuY2UlMjBlbiUyMGQlQzMlQTlidXQlMjBkZSUyMHByaW50ZW1wcyUyMHBvdXIlMjBsYSUyMGZsb3JhaXNvbiUyMGRlcyUyMGNlcmlzaWVycyUyQyUyMGFpbnNpJTIwcXVlJTIwbGUlMjBmZXN0aXZhbCUyME9taXp1dG9yaSUyMCh0b3JjaGVzJTIwZyVDMyVBOWFudGVzKSUyMGF1JTIwTmlnYXRzdS1kbyUyMGNoYXF1ZSUyMHNvaXIlMjBkdSUyMDFlciUyMGF1JTIwMTQlMjBtYXJzJTIyJTJDJTIyc19ub20lMjIlM0ElMjIlRTYlOUQlQjElRTUlQTQlQTclRTUlQUYlQkElMjAoVCVDMyVCNGRhaWppKSU1Q25BdXRyZShzKSUyMG5vbShzKSUyMCUzQSUyMCVFOCU4RiVBRiVFNSU4RSVCMyVFNSVBRSU5NyVFNSVBNCVBNyVFNiU5QyVBQyVFNSVCMSVCMSVFNiU5RCVCMSVFNSVBNCVBNyVFNSVBRiVCQSUyMChLZWdvbnNoJUMzJUJCJTIwRGFpaG9uemFuJTIwVCVDMyVCNGRhaWppKSUyMiUyQyUyMnNfaG9yYWlyZSUyMiUzQSUyMk91dmVydCUyMHRvdXMlMjBsZXMlMjBqb3VycyUyMGRlJTIwbCdhbm4lQzMlQTllJTIwJTNBJTVDbiU1Q25EZSUyMG5vdmVtYnJlJTIwJUMzJUEwJTIwbWFycyUyMCUzQSUyMDhoJTIwLSUyMDE3aCU1Q25EJ2F2cmlsJTIwJUMzJUEwJTIwb2N0b2JyZSUyMCUzQSUyMDdoMzAlMjAtJTIwMTdoMzAlNUNuT3V2ZXJ0dXJlJTIwZHUlMjBtdXMlQzMlQTllJTIwJUMzJUEwJTIwOWgzMCU1Q24lNUNuRGVybmklQzMlQThyZSUyMGVudHIlQzMlQTllJTIwMzAlMjBtaW51dGVzJTIwYXZhbnQlMjBsYSUyMGZlcm1ldHVyZSUyMiUyQyUyMnNfcHJpeCUyMiUzQSUyMlBhcmMlMjAoZW5jZWludGUpJTIwZ3JhdHVpdCU1Q24lNUNuJUMzJTgwJTIwcGFydGlyJTIwZHUlMjAwMWVyJTIwYXZyaWwlMjAyMDI0JTIwJTNBJTVDbkRhaWJ1dHN1ZGVuJTIwc2V1bCUyMCUzQSUyMDgwMCVDMiVBNSUyMCh+NCUyQzI4JUUyJTgyJUFDKSU1Q25NdXMlQzMlQTllJTIwc2V1bCUyMCUzQSUyMDgwMCVDMiVBNSUyMCh+NCUyQzI4JUUyJTgyJUFDKSU1Q25UaWNrZXQlMjBjb21iaW4lQzMlQTklMjBEYWlidXRzdWRlbiUyMCUyQiUyMG11cyVDMyVBOWUlMjAlM0ElMjAxLjIwMCVDMiVBNSUyMCh+NiUyQzQyJUUyJTgyJUFDKSUyMiUyQyUyMndlYiUyMiUzQSUyMmh0dHBzJTNBJTJGJTJGd3d3LnRvZGFpamkub3IuanAlMkZlbiUyRiUyMiUyQyUyMm1ldGVvJTIyJTNBJTIyJTNDZGl2JTIwaWQlM0QlNUMlMjJ3d19mOWNmYzk4M2EyZDBkJTVDJTIyJTIwdiUzRCcxLjMnJTIwbG9jJTNEJ2lkJyUyMGElM0QnJTdCJTVDJTIydCU1QyUyMiUzQSU1QyUyMmhvcml6b250YWwlNUMlMjIlMkMlNUMlMjJsYW5nJTVDJTIyJTNBJTVDJTIyZnIlNUMlMjIlMkMlNUMlMjJzbF9scGwlNUMlMjIlM0ExJTJDJTVDJTIyaWRzJTVDJTIyJTNBJTVCJTVDJTIyd2w2ODU3JTVDJTIyJTVEJTJDJTVDJTIyZm9udCU1QyUyMiUzQSU1QyUyMkFyaWFsJTVDJTIyJTJDJTVDJTIyc2xfaWNzJTVDJTIyJTNBJTVDJTIyb25lX2ElNUMlMjIlMkMlNUMlMjJzbF9zb3QlNUMlMjIlM0ElNUMlMjJjZWxzaXVzJTVDJTIyJTJDJTVDJTIyY2xfYmtnJTVDJTIyJTNBJTVDJTIyJTIzMDAwMDAwJTVDJTIyJTJDJTVDJTIyY2xfZm9udCU1QyUyMiUzQSU1QyUyMiUyM0ZGRkZGRiU1QyUyMiUyQyU1QyUyMmNsX2Nsb3VkJTVDJTIyJTNBJTVDJTIyJTIzRkZGRkZGJTVDJTIyJTJDJTVDJTIyY2xfcGVyc3AlNUMlMjIlM0ElNUMlMjIlMjM4MUQ0RkElNUMlMjIlMkMlNUMlMjJjbF9zdW4lNUMlMjIlM0ElNUMlMjIlMjNGRkMxMDclNUMlMjIlMkMlNUMlMjJjbF9tb29uJTVDJTIyJTNBJTVDJTIyJTIzRkZDMTA3JTVDJTIyJTJDJTVDJTIyY2xfdGh1bmQlNUMlMjIlM0ElNUMlMjIlMjNGRjU3MjIlNUMlMjIlN0QnJTNFUGx1cyUyMGRlJTIwcHIlQzMlQTl2aXNpb25zJTNBJTIwJTNDYSUyMGhyZWYlM0QlNUMlMjJodHRwcyUzQSUyRiUyRm9uZXdlYXRoZXIub3JnJTJGamElMkZ0b2t5byUyRjEwX2RheXMlMkYlNUMlMjIlMjBpZCUzRCU1QyUyMnd3X2Y5Y2ZjOTgzYTJkMGRfdSU1QyUyMiUyMHRhcmdldCUzRCU1QyUyMl9ibGFuayU1QyUyMiUzRW9uZXdlYXRoZXIub3JnJTNDJTJGYSUzRSUzQyUyRmRpdiUzRSUzQ3NjcmlwdCUyMGFzeW5jJTIwc3JjJTNEJTVDJTIyaHR0cHMlM0ElMkYlMkZhcHAzLndlYXRoZXJ3aWRnZXQub3JnJTJGanMlMkYlM0ZpZCUzRHd3X2Y5Y2ZjOTgzYTJkMGQlNUMlMjIlM0UlM0MlMkZzY3JpcHQlM0UlMjIlMkMlMjJsYXQlMjIlM0ElMjIzNC42ODgzJTIyJTJDJTIybG5nJTIyJTNBJTIyMTM1LjgzOTglMjIlMkMlMjJjMSUyMiUzQSU1QiUyMlBhcmMlMjBkZSUyME5hcmElMjIlMkMlMjJMZSUyMHBhcmMlMjBhdXglMjBjZXJmcyUyMHNhY3IlQzMlODMlQzIlQTlzJTIyJTJDJTIyNDAwJTIwbSUyMiUyQyUyMmh0dHBzJTNBJTJGJTJGd3d3LmthbnBhaS5mciUyRnNpdGVzJTJGZGVmYXVsdCUyRmZpbGVzJTJGc3R5bGVzJTJGY29udGVudF9sZyUyRnB1YmxpYyUyRnVwbG9hZHMlMkYyMDE0JTJGMDQlMkZwYXJjLW5hcmEtMTIuanBnJTIyJTJDJTIyZ3VpZGUuaHRtbCUyMiU1RCUyQyUyMmMyJTIyJTNBJTVCJTIyS2FzdWdhJTIwVGFpc2hhJTIyJTJDJTIyTGUlMjBzYW5jdHVhaXJlJTIwYXV4JTIwbGFudGVybmVzJTIyJTJDJTIyNDUwJTIwbSUyMiUyQyUyMmh0dHBzJTNBJTJGJTJGd3d3LmthbnBhaS5mciUyRnNpdGVzJTJGZGVmYXVsdCUyRmZpbGVzJTJGc3R5bGVzJTJGY29udGVudF9sZyUyRnB1YmxpYyUyRnVwbG9hZHMlMkYyMDE0JTJGMDUlMkZrYXN1Z2EtdGFpc2hhLTYuanBnJTIyJTJDJTIyZ3VpZGUuaHRtbCUyMiU1RCUyQyUyMmMzJTIyJTNBJTVCJTIyS29mdWt1LWppJTIyJTJDJTIyTGElMjBwYWdvZGQlMjAlQzMlODMlQzIlQTAlMjA1JTIwJUMzJTgzJUMyJUE5dGFnZXMlMjIlMkMlMjI4MDAlMjBtJTIyJTJDJTIyaHR0cHMlM0ElMkYlMkZ3d3cua2FucGFpLmZyJTJGc2l0ZXMlMkZkZWZhdWx0JTJGZmlsZXMlMkZzdHlsZXMlMkZjb250ZW50X2xnJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRmtvZnVrdS1qaS0yLmpwZyUyMiUyQyUyMmd1aWRlLmh0bWwlMjIlNUQlMkMlMjJibG9jcyUyMiUzQSU1QiU3QiUyMnR5cGUlMjIlM0ElMjJ0ZXh0ZSUyMiUyQyUyMnZhbCUyMiUzQSUyMkxlJTIwVG9kYWktamklMjBlc3QlMjB1biUyMHRlbXBsZSUyMGJvdWRkaGlxdWUlMjBzaXR1JUMzJUE5JTIwJUMzJUEwJTIwTmFyYSUyQyUyMHN1ciUyMGwnJUMzJUFFbGUlMjBwcmluY2lwYWxlJTIwZGUlMjBIb25zaHUuJTIwQ2UlMjBncmFuZCUyMHRlbXBsZSUyMGRlJTIwbCdlc3QlMjBhYnJpdGUlMjBub3RhbW1lbnQlMjBsZSUyMGIlQzMlQTJ0aW1lbnQlMjBEYWlidXRzdS1kZW4lMkMlMjBjb25udWUlMjBwb3VyJTIwJUMzJUFBdHJlJTIwbGElMjBwbHVzJTIwZ3JhbmRlJTIwY29uc3RydWN0aW9uJTIwZW4lMjBib2lzJTIwZHUlMjBtb25kZSUyMGV0JTIwaCVDMyVBOWJlcmdlYW50JTIwdW4lMjBtb251bWVudGFsJTIwR3JhbmQlMjBCb3VkZGhhJTIwYXNzaXMlMjBlbiUyMGJyb256ZS4lMjBJbCUyMGVzdCUyMGNsYXNzJUMzJUE5JTIwYXUlMjBwYXRyaW1vaW5lJTIwbW9uZGlhbCUyMGRlJTIwbCdVbmVzY28lMjBhdSUyMHRpdHJlJTIwZGVzJTIwbW9udW1lbnRzJTIwaGlzdG9yaXF1ZXMlMjBkZSUyMGwnYW5jaWVubmUlMjBOYXJhLiUyMiU3RCUyQyU3QiUyMnR5cGUlMjIlM0ElMjJ0aXRyZSUyMiUyQyUyMnZhbCUyMiUzQSUyMlVuJTIwc2l0ZSUyMGluY29udG91cm5hYmxlJTIwZGUlMjBOYXJhJTIyJTdEJTJDJTdCJTIydHlwZSUyMiUzQSUyMnRleHRlJTIyJTJDJTIydmFsJTIyJTNBJTIyRXQlMjBwb3VyJTIwY2F1c2UlMkMlMjBzYSUyMGMlQzMlQTlsJUMzJUE5YnJpdCVDMyVBOSUyMGVzdCUyMG5vdGFtbWVudCUyMGR1ZSUyMCVDMyVBMCUyMGxhJTIwcGklQzMlQThjZSUyMG1hJUMzJUFFdHJlc3NlJTIwZGUlMjBzb24lMjBhcmNoaXRlY3R1cmUlMjAlM0ElMjB1bmUlMjBtYWplc3R1ZXVzZSUyMHN0YXR1ZSUyMGVuJTIwYnJvbnplJTIwZGUlMjBCb3VkZGhhJTIwYXNzaXMlMkMlMjBxdWklMjByZXByJUMzJUE5c2VudGUlMjBWYWlyb2NhbmElMjAoRGFpbmljaGklMjBOeW9yYWkpJTIwZXQlMjBtZXN1cmUlMjBsYSUyMGJhZ2F0ZWxsZSUyMGRlJTIwMTglMjBtJUMzJUE4dHJlcyUyMGRlJTIwaGF1dCUyMGV0JTIwMjUwJTIwdG9ubmVzLiUyMElsJTIwc2UlMjBsb2dlJTIwYWluc2klMjBlbnRyZSUyMHNlcyUyMGNvbXBhcnNlcyUyMGRlJTIwS2FtYWt1cmElMjAoMTNtKSUyMGV0JTIwTm9rb2dpcml5YW1hJTIwKDMxbSklMkMlMjBjZXJ0ZXMlMjBsb2luJTIwZGUlMjBsYSUyMGJpZW4lMjBwbHVzJTIwciVDMyVBOWNlbnRlJTIwcmVwciVDMyVBOXNlbnRhdGlvbiUyMGRlYm91dCUyMCVDMyVBMCUyMFVzaGlrdSUyMCgxMjBtJTIwISkuJTIyJTdEJTJDJTdCJTIydHlwZSUyMiUzQSUyMmltYWdlJTIyJTJDJTIydmFsJTIyJTNBJTIyaHR0cHMlM0ElMkYlMkZ3d3cua2FucGFpLmZyJTJGc2l0ZXMlMkZkZWZhdWx0JTJGZmlsZXMlMkZzdHlsZXMlMkZjb250ZW50X2xnJTJGcHVibGljJTJGdXBsb2FkcyUyRjIwMTQlMkYwNCUyRnRvZGFpLWppLTI2LmpwZyUyMiU3RCUyQyU3QiUyMnR5cGUlMjIlM0ElMjJ0aXRyZSUyMiUyQyUyMnZhbCUyMiUzQSUyMkNvbnRlbXBsZXIlMjBsZSUyMHBsdXMlMjB2aWV1eCUyMERhaWJ1dHN1JTIwZHUlMjBKYXBvbiUyMiU3RCUyQyU3QiUyMnR5cGUlMjIlM0ElMjJ0ZXh0ZSUyMiUyQyUyMnZhbCUyMiUzQSUyMk1haXMlMjBpbCUyMGVzdCUyMCVDMyVBOWdhbGVtZW50JTIwZXQlMjBwZXV0LSVDMyVBQXRyZSUyMHN1cnRvdXQlMjBsZSUyMHBsdXMlMjB2aWV1eCUyMEJvdWRkaGElMjBkZSUyMGxhJTIwYmFuZGUlMkMlMjBwdWlzcXVlJTIwc2ElMjBjb25zdHJ1Y3Rpb24lMjByZW1vbnRlJTIwYXUlMjBtaWxpZXUlMjBkdSUyMFZJSUllJTIwc2klQzMlQThjbGUlMkMlMjBhbG9ycyUyMHF1ZSUyME5hcmElMjAlQzMlQTl0YWl0JTIwZW5jb3JlJTIwbGElMjBjYXBpdGFsZSUyMGR1JTIwSmFwb24uJTIwJUMzJTgwJTIwc2VzJTIwYyVDMyVCNHQlQzMlQTlzJTJDJTIwZCdhdXRyZXMlMjBpbW1lbnNlcyUyMHN0YXR1ZXMlMjB0b3V0JTIwYXVzc2klMjBpbXByZXNzaW9ubmFudGVzJTIwY29tcGwlQzMlQTh0ZW50JTIwdW5lJTIwdmlzaXRlJTIwdHIlQzMlQThzJTIwcmljaGUlMjBwb3VyJTIwbGVzJTIwbWlyZXR0ZXMuJTVDbiU1Q25EYWlidXRzdS1kZW4lMkMlMjBsZSUyMHN1cGVyYmUlMjBiJUMzJUEydGltZW50JTIwcXVpJTIwbGVzJTIwaCVDMyVBOWJlcmdlJTJDJTIwZnV0JTIwcmVjb25zdHJ1aXQlMjBwb3VyJTIwbGElMjBkZXJuaSVDMyVBOHJlJTIwZm9pcyUyMGVuJTIwMTY5MiUyMHN1aXRlJTIwJUMzJUEwJTIwdW4lMjBpbmNlbmRpZSUyQyUyMGF1eCUyMGRldXgtdGllcnMlMjBkZSUyMHNhJTIwdGFpbGxlJTIwb3JpZ2luZWxsZS4lMjBJbCUyMHJlc3RlJTIwbWFsZ3IlQzMlQTklMjB0b3V0JTJDJTIwJUMzJUEwJTIwY2UlMjBqb3VyJTJDJTIwbGElMjBwbHVzJTIwZ3JhbmRlJTIwY29uc3RydWN0aW9uJTIwZW4lMjBib2lzJTIwZHUlMjBtb25kZS4lMjBQYXMlMjAlQzMlQTl0b25uYW50JTIwcXUnaWwlMjBmaWd1cmUlMjBlbiUyMGJvbm5lJTIwcGxhY2UlMjBhdSUyMHBhdHJpbW9pbmUlMjBtb25kaWFsJTIwZGUlMjBsJ1VuZXNjby4lMjIlN0QlMkMlN0IlMjJ0eXBlJTIyJTNBJTIyaW1hZ2UlMjIlMkMlMjJ2YWwlMjIlM0ElMjJodHRwcyUzQSUyRiUyRnd3dy5rYW5wYWkuZnIlMkZzaXRlcyUyRmRlZmF1bHQlMkZmaWxlcyUyRnN0eWxlcyUyRmNvbnRlbnRfbGclMkZwdWJsaWMlMkZ1cGxvYWRzJTJGMjAxNCUyRjA0JTJGdG9kYWktamktMzUuanBnJTIyJTdEJTVEJTdE");
+            window.location.href = 'admin_guide.html';
+        }
+
+        let currentIndex = 0;
+        const imagesGalerie = ['https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2020/06/nara-covid19-printemps-2020-5.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-2.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-6.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-1.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_2_3/public/uploads/2014/04/todai-ji-35.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-5.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2020/06/nara-covid19-printemps-2020-6.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-25.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-30.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_1_2/public/uploads/2014/04/todai-ji-29.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_2_3/public/uploads/2014/04/todai-ji-35.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_2_3/public/uploads/2014/04/todai-ji-12.jpg','https://www.kanpai.fr/sites/default/files/styles/gallery_square_sm/public/uploads/2014/04/todai-ji-17.jpg'];
+
+        function ouvrirLightbox(index) {
+            if(imagesGalerie.length === 0) return;
+            currentIndex = index;
+            document.getElementById('lightbox-img').src = imagesGalerie[currentIndex];
+            document.getElementById('lightbox').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        function fermerLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        function changeImg(direction) {
+            currentIndex += direction;
+            if (currentIndex >= imagesGalerie.length) currentIndex = 0;
+            if (currentIndex < 0) currentIndex = imagesGalerie.length - 1;
+            document.getElementById('lightbox-img').src = imagesGalerie[currentIndex];
+        }
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target !== document.getElementById('lightbox-img') && e.target.className !== 'lb-btn') fermerLightbox();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('lightbox').style.display === 'flex') {
+                if (e.key === "Escape") fermerLightbox();
+                if (e.key === "ArrowRight") changeImg(1);
+                if (e.key === "ArrowLeft") changeImg(-1);
+            }
+        });
+    </script>
+</body>
+</html>

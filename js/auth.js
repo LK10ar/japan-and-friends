@@ -8,6 +8,7 @@ function getToken() { return localStorage.getItem('auth-token'); }
 function getUsername() { return localStorage.getItem('username'); }
 function getAvatar() { return localStorage.getItem('avatarUrl') || ""; }
 function estConnecte() { return !!getToken(); }
+function estAdmin() { return getUsername() === 'lk10'; } // Seul ce compte peut créer/modifier du contenu.
 
 function deconnexion() {
   localStorage.removeItem('auth-token');

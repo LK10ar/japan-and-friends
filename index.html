@@ -420,12 +420,47 @@
             if(tags.length === 0) { alert("Coche au moins une catégorie à droite !"); btn.innerText = "🔍 Scanner TOUT dans cette zone"; return; }
 
             let query = `[out:json][timeout:25];(${tags.join('')});out 500;`;
-            let url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+            // Plusieurs serveurs Overpass interrogés EN PARALLÈLE (le premier qui répond gagne) :
+            // c'est plus rapide et plus fiable qu'un essai l'un après l'autre.
+            const serveursOverpass = [
+                'https://overpass-api.de/api/interpreter',
+                'https://overpass.kumi.systems/api/interpreter',
+                'https://overpass.openstreetmap.fr/api/interpreter'
+            ];
+
+            const interroger = (serveur) => {
+                const controleur = new AbortController();
+                const timeoutId = setTimeout(() => controleur.abort(), 15000);
+                return fetch(serveur, {
+                    method: 'POST',
+                    body: 'data=' + encodeURIComponent(query),
+                    signal: controleur.signal
+                })
+                .then(reponse => {
+                    clearTimeout(timeoutId);
+                    if (!reponse.ok) throw new Error(`Serveur a répondu ${reponse.status}`);
+                    return reponse.json();
+                })
+                .catch(err => { clearTimeout(timeoutId); throw err; });
+            };
+
+            let donnees = null;
+            let derniereErreur = null;
+            try {
+                donnees = await Promise.any(serveursOverpass.map(interroger));
+            } catch (erreurGlobale) {
+                // AggregateError : tous les serveurs ont échoué
+                derniereErreur = erreurGlobale.errors ? erreurGlobale.errors.map(e => e.message).join(' / ') : erreurGlobale.message;
+            }
+
+            if (!donnees) {
+                alert("😕 Les serveurs de données OpenStreetMap sont indisponibles pour le moment (" + derniereErreur + "). Réessaie dans une minute.");
+                btn.innerText = "🔍 Scanner TOUT dans cette zone";
+                return;
+            }
 
             try {
-                let reponse = await fetch(url);
-                let donnees = await reponse.json();
-                
                 let ajouts = 0;
                 donnees.elements.forEach(lieu => {
                     if (lieu.lat && lieu.lon && lieu.tags && lieu.tags.name) {
