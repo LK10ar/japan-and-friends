@@ -35,10 +35,15 @@
     .profil-header { display: flex; align-items: center; gap: 20px; }
     .avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--couleur-sakura); background: #333; }
     .favoris-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 15px; }
-    .fav-card { background: #000; border-radius: 8px; overflow: hidden; text-decoration: none; color: white; border: 1px solid #333; transition: 0.2s; }
+    .fav-card { background: #000; border-radius: 8px; overflow: hidden; text-decoration: none; color: white; border: 1px solid #333; transition: 0.2s; position: relative; }
     .fav-card:hover { border-color: var(--couleur-sakura); }
     .fav-card img { width: 100%; height: 80px; object-fit: cover; }
     .fav-card .fav-titre { padding: 8px; font-size: 13px; }
+    .btn-retirer-fav { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; border: none; background: rgba(0,0,0,0.7); color: white; cursor: pointer; font-size: 12px; line-height: 1; }
+    .btn-retirer-fav:hover { background: var(--couleur-sakura); color: var(--texte-fonce); }
+    .groupe-categorie { margin-bottom: 25px; }
+    .titre-groupe { font-size: 16px; color: var(--couleur-sakura); border-bottom: 1px solid var(--bordure-kanpai); padding-bottom: 8px; margin-bottom: 4px; }
+    .compte-groupe { color: #888; font-size: 13px; font-weight: normal; }
     .vide { color: #888; font-size: 14px; font-style: italic; }
 
     @media (max-width: 700px) {
@@ -161,6 +166,23 @@
         }
     });
 
+    // Nom lisible + emoji pour chaque catégorie de lieu (fallback générique si non listée).
+    const NOMS_CATEGORIES = {
+        temples: "⛩️ Temples et sanctuaires", religion: "⛩️ Religion et spiritualité", histoire: "🏯 Histoire du Japon",
+        contes: "📖 Contes et légendes", arts: "🎭 Arts et histoire", tatouages: "🖋️ Tatouages",
+        litterature: "📚 Littérature", anime: "🌸 Mangas / Animés", films: "🎬 Films / Films d'animation",
+        musique: "🎵 Musique", sortir: "🌃 Sortir le soir", travailler: "💼 Travailler", femmes: "👩 Femmes",
+        mode: "👗 Mode", sante: "🏥 Santé", insolite: "🎪 Insolite", kawaii: "🎀 Kawaii", animaux: "🐾 Animaux",
+        visas: "📄 Visas", avion: "✈️ Avion et aéroports", hebergement: "🏨 Hébergement", transports: "🚆 Transports",
+        internet: "📶 Téléphone et internet", budget: "💰 Budget et argent", itineraires: "🗺️ Itinéraires",
+        cuisine: "🍜 Cuisine", shopping: "🛍️ Shopping", enfants: "👶 Voyager avec des enfants",
+        saisons: "🌸 Saisons", meteo_info: "☀️ Météo", horaire: "🕐 Horaires et décalage", bagages: "🎒 Bagages",
+        fetes: "🎉 Fêtes et festivals", catastrophes: "⚠️ Catastrophes naturelles", yen: "💴 Le yen", douane: "🛃 Douane"
+    };
+    function nomCategorie(cat) {
+        return NOMS_CATEGORIES[cat] || (cat ? cat.charAt(0).toUpperCase() + cat.slice(1) : "Autres");
+    }
+
     async function afficherProfil() {
         document.getElementById('bloc-auth').style.display = 'none';
         document.getElementById('bloc-profil').style.display = 'block';
@@ -171,19 +193,58 @@
 
         try {
             const profil = await apiFetch('/api/profile');
-            const grille = document.getElementById('grilleFavoris');
-            if (!profil.favorisLieux || profil.favorisLieux.length === 0) {
-                grille.innerHTML = `<p class="vide">Aucun favori pour l'instant. Ajoute des lieux depuis le Guide Culturel !</p>`;
-                return;
-            }
-            grille.innerHTML = profil.favorisLieux.map(l => `
-                <a class="fav-card" href="article.html?id=${l.id}">
-                    <img src="${l.img}" alt="${l.titre}">
-                    <div class="fav-titre">${l.titre}</div>
-                </a>
-            `).join('');
+            window.mesFavoris = profil.favorisLieux || [];
+            afficherFavoris();
         } catch (err) {
             document.getElementById('grilleFavoris').innerHTML = `<p class="vide">Impossible de charger les favoris.</p>`;
+        }
+    }
+
+    function afficherFavoris() {
+        const grille = document.getElementById('grilleFavoris');
+        const favoris = window.mesFavoris || [];
+        if (favoris.length === 0) {
+            grille.innerHTML = `<p class="vide">Aucun favori pour l'instant. Ajoute des lieux depuis le Guide Culturel, Mots Utiles ou Bons Plans & Transports !</p>`;
+            return;
+        }
+
+        // Regroupement par catégorie
+        const groupes = {};
+        favoris.forEach(l => {
+            const cat = l.categorie || "autres";
+            if (!groupes[cat]) groupes[cat] = [];
+            groupes[cat].push(l);
+        });
+
+        // Trié par nombre de favoris décroissant, pour mettre les catégories les plus fournies en premier
+        const categoriesTriees = Object.keys(groupes).sort((a, b) => groupes[b].length - groupes[a].length);
+
+        grille.innerHTML = categoriesTriees.map(cat => `
+            <div class="groupe-categorie">
+                <h3 class="titre-groupe">${nomCategorie(cat)} <span class="compte-groupe">(${groupes[cat].length})</span></h3>
+                <div class="favoris-grid">
+                    ${groupes[cat].map(l => `
+                        <div class="fav-card">
+                            <a href="article.html?id=${l.id}">
+                                <img src="${l.img}" alt="${l.titre}" onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Skyscrapers_of_Shinjuku_2009_January.jpg/300px-Skyscrapers_of_Shinjuku_2009_January.jpg'">
+                                <div class="fav-titre">${l.titre}</div>
+                            </a>
+                            <button class="btn-retirer-fav" onclick="retirerFavori('${l._id}', event)" title="Retirer des favoris">✕</button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function retirerFavori(lieuId, event) {
+        event.preventDefault();
+        try {
+            await apiFetch('/api/favoris/lieu/' + lieuId, { method: 'DELETE' });
+            window.mesFavoris = (window.mesFavoris || []).filter(l => l._id !== lieuId);
+            afficherFavoris();
+        } catch (err) {
+            alert("Impossible de retirer ce favori : " + err.message);
         }
     }
 
