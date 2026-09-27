@@ -226,7 +226,7 @@
                     ${groupes[cat].map(l => `
                         <div class="fav-card">
                             <a href="article.html?id=${l.id}">
-                                <img src="${l.img}" alt="${l.titre}" onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Skyscrapers_of_Shinjuku_2009_January.jpg/300px-Skyscrapers_of_Shinjuku_2009_January.jpg'">
+                                <img src="${l.img}" alt="${l.titre}" onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFlMWUxZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjkwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCI+4pup77iPPC90ZXh0Pjwvc3ZnPg=='">
                                 <div class="fav-titre">${l.titre}</div>
                             </a>
                             <button class="btn-retirer-fav" onclick="retirerFavori('${l._id}', event)" title="Retirer des favoris">✕</button>

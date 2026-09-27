@@ -258,7 +258,7 @@
             <button class="btn-retour" onclick="closeArticle()">⬅ Retour au guide</button>
             <button class="btn-edit-art" id="btn-edit-art">✏️ Modifier</button>
         </div>
-        <div class="art-banner"><img id="art-banner-img"></div>
+        <div class="art-banner"><img id="art-banner-img" onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFlMWUxZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjkwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCI+4pup77iPPC90ZXh0Pjwvc3ZnPg=='"></div>
         <main class="art-container">
             <h1 class="art-main-title" id="art-title"></h1>
             <h2 class="art-subtitle" id="art-subtitle"></h2>
@@ -309,8 +309,8 @@
 
         // ================= LE RESTE DU CODE (INCHANGÉ) =================
 
-        // Tout utilisateur connecté peut proposer un nouveau lieu (auteur enregistré sur chaque fiche).
-        if (estConnecte()) {
+        // Seul le compte admin (lk10) peut créer un nouveau lieu.
+        if (estAdmin()) {
             document.getElementById('btn-create-new').style.display = 'block';
             document.querySelector('.logo-admin').style.filter = 'drop-shadow(0px 0px 8px #ffb7c5)';
         }
@@ -337,7 +337,7 @@
 
             let articlesFiltres = baseArticles.filter(art => art.categorie === categorieRecherchee);
             articlesFiltres.forEach(article => {
-                let htmlCard = `<div onclick="openArticle('${article.id}')" class="lien-carte"><article class="article-card"><img src="${article.img}" alt="${article.titre}" class="article-img"><div class="article-content"><div class="article-header"><h3 class="article-title">${article.titre}</h3><p class="article-subtitle">${article.sousTitre}</p></div><p class="article-desc">${article.desc}</p></div></article></div>`;
+                let htmlCard = `<div onclick="openArticle('${article.id}')" class="lien-carte"><article class="article-card"><img src="${article.img}" alt="${article.titre}" class="article-img" onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFlMWUxZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjkwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCI+4pup77iPPC90ZXh0Pjwvc3ZnPg=='"><div class="article-content"><div class="article-header"><h3 class="article-title">${article.titre}</h3><p class="article-subtitle">${article.sousTitre}</p></div><p class="article-desc">${article.desc}</p></div></article></div>`;
                 grille.innerHTML += htmlCard;
             });
         }
@@ -357,6 +357,8 @@
                     else if (b.type === 'image') contentHtml += `<img src="${b.val}" class="article-in-img">`;
                     else if (b.type === 'video') { let vId = b.val.split('v=')[1]; if(vId) vId = vId.split('&')[0]; contentHtml += `<div class="video-container"><iframe src="https://www.youtube.com/embed/${vId}" frameborder="0" allowfullscreen></iframe></div>`; }
                 });
+            } else if (art.descLongue) {
+                contentHtml = art.descLongue.split(/\r?\n/).filter(p => p.trim() !== '').map(p => `<p>${p}</p>`).join('\n');
             } else if (art.desc) { contentHtml = `<p>${art.desc}</p>`; } 
             document.getElementById('art-content').innerHTML = contentHtml;
 
@@ -436,7 +438,7 @@
                     <div onclick="openArticle('${c.id}')" class="carousel-card">
                         <div class="card-img-wrapper">
                             <span class="card-distance">✨ Recommandé</span>
-                            <img src="${c.img}" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Skyscrapers_of_Shinjuku_2009_January.jpg/300px-Skyscrapers_of_Shinjuku_2009_January.jpg'">
+                            <img src="${c.img}" onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzFlMWUxZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjkwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCI+4pup77iPPC90ZXh0Pjwvc3ZnPg=='">
                         </div>
                         <div class="card-body">
                             <h5 class="card-title">${c.titre}</h5>
